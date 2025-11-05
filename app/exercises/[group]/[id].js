@@ -4,7 +4,8 @@ import { doc, getDoc } from 'firebase/firestore';
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Image, Linking, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { EXERCISES } from '../../../constants/exercises';
-import { db } from '../../../firebase';
+import { auth, db } from '../../../firebase';
+import { addPlanItemFS } from '../../../lib/programs';
 
 const LEVEL_LABEL = { beginner:'Yeni', intermediate:'Orta', advanced:'İleri' };
 
@@ -54,29 +55,35 @@ export default function ExerciseDetail() {
   const data = fsData || localData;
 
   const addToPlan = async () => {
-    try {
+  try {
+    const payload = {
+      exerciseId: String(data?.id ?? id),
+      exerciseName: data?.name || 'Egzersiz',
+      group: String(data?.group || group),
+      level: data?.level || 'beginner',
+      targetSets: data?.raw?.metrics?.defaultSets ?? 3,
+      targetReps: data?.raw?.metrics?.defaultReps ?? '10-12',
+      restSec: data?.raw?.metrics?.defaultRestSec ?? 60,
+      tempo: data?.raw?.metrics?.defaultTempo ?? null,
+      thumb: data?.thumb || null,
+      addedAt: Date.now(),
+      source: fsData ? 'firestore' : 'local',
+    };
+
+    if (auth.currentUser) {
+      await addPlanItemFS(payload);      // → Firestore
+    } else {
       const key='@plan';
       const raw = await AsyncStorage.getItem(key);
       const arr = raw ? JSON.parse(raw) : [];
-      const item = {
-        exerciseId: String(data?.id ?? id),
-        exerciseName: data?.name || 'Egzersiz',
-        group: String(data?.group || group),
-        level: data?.level || 'beginner',
-        targetSets: data?.raw?.metrics?.defaultSets ?? 3,
-        targetReps: data?.raw?.metrics?.defaultReps ?? '10-12',
-        restSec: data?.raw?.metrics?.defaultRestSec ?? 60,
-        tempo: data?.raw?.metrics?.defaultTempo ?? null,
-        thumb: data?.thumb || null,
-        addedAt: Date.now(),
-        source: fsData ? 'firestore' : 'local',
-      };
-      await AsyncStorage.setItem(key, JSON.stringify([item, ...arr]));
-      Alert.alert('Eklendi', `"${item.exerciseName}" programa eklendi.`);
-    } catch (e) {
-      Alert.alert('Hata', 'Programa eklenemedi.');
+      await AsyncStorage.setItem(key, JSON.stringify([payload, ...arr])); // → Local
     }
-  };
+
+    Alert.alert('Eklendi', `"${payload.exerciseName}" programa eklendi.`);
+  } catch (e) {
+    Alert.alert('Hata', e.message || 'Programa eklenemedi.');
+  }
+};
 
   if (loading && !localData) {
     return (<View style={{ flex:1, justifyContent:'center', alignItems:'center', padding:16 }}>

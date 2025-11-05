@@ -1,17 +1,23 @@
-import { useRouter } from 'expo-router';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { signOut } from 'firebase/auth';
+import { Alert, Text, TouchableOpacity, View } from 'react-native';
+import { auth } from '../../firebase';
 
 export default function SettingsScreen() {
-  const router = useRouter();
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      Alert.alert('Çıkış yapıldı', 'Tekrar görüşürüz!');
+    } catch (e) {
+      Alert.alert('Hata', e.message || 'Çıkış başarısız');
+    }
+  };
+
   return (
     <View style={{ flex:1, justifyContent:'center', alignItems:'center', gap:12 }}>
-      <TouchableOpacity onPress={() => router.push('/auth/login')}
-        style={{ backgroundColor:'#0ea5e9', padding:12, borderRadius:10 }}>
-        <Text style={{ color:'#fff', fontWeight:'800' }}>Giriş Yap</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={() => router.push('/auth/register')}
-        style={{ backgroundColor:'#10b981', padding:12, borderRadius:10 }}>
-        <Text style={{ color:'#fff', fontWeight:'800' }}>Kayıt Ol</Text>
+      <Text style={{ fontSize:20, fontWeight:'700', marginBottom:8 }}>Ayarlar</Text>
+      <TouchableOpacity onPress={handleLogout}
+        style={{ backgroundColor:'#ef4444', paddingVertical:12, paddingHorizontal:24, borderRadius:10 }}>
+        <Text style={{ color:'#fff', fontWeight:'800' }}>Çıkış Yap</Text>
       </TouchableOpacity>
     </View>
   );
