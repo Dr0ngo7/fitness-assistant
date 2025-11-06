@@ -3,6 +3,7 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useState } from 'react';
 import { Alert, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { auth } from '../../firebase';
+import { migrateLocalPlanToFS } from '../../lib/migrate';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -12,6 +13,9 @@ export default function LoginScreen() {
   const onLogin = async () => {
     try {
       await signInWithEmailAndPassword(auth, email.trim(), pass);
+      await migrateLocalPlanToFS();
+        router.replace('/(tabs)/musclemap');
+
       router.replace('/(tabs)/musclemap');
     } catch (e) {
       Alert.alert('Giriş başarısız', e.message || 'Hata');

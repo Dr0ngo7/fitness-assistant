@@ -1,67 +1,122 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, Image, Text, View } from 'react-native';
-import { auth } from '../../firebase';
-import { fetchPlanWithExercisesFS } from '../../lib/programs';
+import { useRouter } from 'expo-router';
+import { collection, deleteDoc, doc, getDocs, onSnapshot } from 'firebase/firestore';
+import { useCallback, useEffect, useState } from 'react';
+import { Alert, FlatList, RefreshControl, Text, TouchableOpacity, View } from 'react-native';
+import { auth, db } from '../../firebase';
 
 export default function PlanScreen() {
-  const [loading, setLoading] = useState(true);
+  const router = useRouter();
   const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
+  const uid = auth.currentUser?.uid;
+
+  // 🔹 Canlı dinleme: users/{uid}/plan_items
   useEffect(() => {
-    let alive = true;
-    (async () => {
-      try {
-        setLoading(true);
-        if (auth.currentUser) {
-          const res = await fetchPlanWithExercisesFS();
-          const norm = (res.items || []).map((it) => ({
-            id: it.id,
-            exerciseId: it.exercise?.id || it.exerciseId,
-            exerciseName: it.exercise?.name || it.exerciseName || 'Egzersiz',
-            group: it.exercise?.group || it.group,
-            level: (it.exercise?.level || it.level || 'beginner').toLowerCase(),
-            targetSets: it.targetSets ?? 3,
-            targetReps: it.targetReps ?? '10-12',
-            restSec: it.restSec ?? 60,
-            tempo: it.tempo ?? null,
-            thumb: (it.exercise?.imageUrls && it.exercise.imageUrls[0]) || it.thumb || null,
-          }));
-          if (alive) setItems(norm);
-        } else {
-          const raw = await AsyncStorage.getItem('@plan');
-          const arr = raw ? JSON.parse(raw) : [];
-          if (alive) setItems(arr);
-        }
-      } finally { if (alive) setLoading(false); }
-    })();
-    return () => { alive = false; };
-  }, []);
+    if (!uid) { setLoading(false); return; }
+    const colRef = collection(db, `users/${uid}/plan_items`);
+    const unsub = onSnapshot(
+      colRef,
+      (snap) => {
+        const arr = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        setItems(arr);
+        setLoading(false);
+      },
+      (err) => {
+        console.error('plan_items onSnapshot error:', err);
+        setLoading(false);
+      }
+    );
+    return () => unsub();
+  }, [uid]);
 
-  if (loading) return <ActivityIndicator style={{ marginTop:24 }} />;
-  if (!items.length) return <Text style={{ padding:16 }}>Programında henüz egzersiz yok.</Text>;
+  const onRefresh = useCallback(async () => {
+    if (!uid) return;
+    setRefreshing(true);
+    try {
+      const snap = await getDocs(collection(db, `users/${uid}/plan_items`));
+      setItems(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+    } finally {
+      setRefreshing(false);
+    }
+  }, [uid]);
+
+  const removeItem = async (itemId) => {
+    if (!uid) return;
+    Alert.alert('Sil', 'Bu egzersizi planınızdan kaldırmak istiyor musunuz?', [
+      { text: 'Vazgeç', style: 'cancel' },
+      {
+        text: 'Sil',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await deleteDoc(doc(db, `users/${uid}/plan_items/${itemId}`));
+          } catch (e) {
+            Alert.alert('Hata', 'Silinemedi: ' + (e?.message || e));
+          }
+        },
+      },
+    ]);
+  };
+
+  if (!auth.currentUser) {
+    return (
+      <View style={{ flex:1, alignItems:'center', justifyContent:'center', padding:16 }}>
+        <Text>Planı görmek için giriş yapın.</Text>
+      </View>
+    );
+  }
+
+  if (loading) {
+    return (
+      <View style={{ flex:1, alignItems:'center', justifyContent:'center' }}>
+        <Text>Yükleniyor…</Text>
+      </View>
+    );
+  }
+
+  if (!items.length) {
+    return (
+      <View style={{ flex:1, alignItems:'center', justifyContent:'center', padding:16 }}>
+        <Text>Planınızda egzersiz yok.</Text>
+      </View>
+    );
+  }
 
   return (
     <FlatList
       data={items}
-      keyExtractor={(x,i)=>String(x.id||x.exerciseId||i)}
+      keyExtractor={(it) => it.id}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       contentContainerStyle={{ padding:16, gap:12 }}
       renderItem={({ item }) => (
-        <View style={{ flexDirection:'row', gap:12, borderWidth:1, borderColor:'#e5e7eb', borderRadius:12, padding:12 }}>
-          {item.thumb ? (
-            <Image source={{ uri:item.thumb }} style={{ width:64, height:64, borderRadius:8 }} />
-          ) : (
-            <View style={{ width:64, height:64, borderRadius:8, backgroundColor:'#f1f5f9', alignItems:'center', justifyContent:'center' }}>
-              <Text style={{ fontSize:12, opacity:0.6 }}>no img</Text>
-            </View>
-          )}
-          <View style={{ flex:1 }}>
-            <Text style={{ fontWeight:'800' }}>{item.exerciseName}</Text>
-            <Text style={{ opacity:0.7, marginTop:4 }}>Grup: {item.group} • Seviye: {item.level}</Text>
-            <Text style={{ opacity:0.6, marginTop:4, fontSize:12 }}>
-              Set: {item.targetSets} • Tekrar: {item.targetReps} • Dinlenme: {item.restSec}s
+        <View
+          style={{
+            borderWidth:1, borderColor:'#e5e7eb', borderRadius:12, padding:12,
+            backgroundColor:'#fff'
+          }}
+        >
+          <TouchableOpacity
+            onPress={() => router.push(`/exercises/${item.group}/${item.exerciseId || item.id}`)}
+          >
+            <Text style={{ fontWeight:'800', fontSize:16 }}>{item.exerciseName || item.name || 'Egzersiz'}</Text>
+            <Text style={{ opacity:0.7, marginTop:4 }}>
+              {item.group} • {item.level || 'beginner'}
             </Text>
-          </View>
+            {item.targetSets && item.targetReps ? (
+              <Text style={{ opacity:0.6, marginTop:2 }}>
+                Set: {item.targetSets} • Tekrar: {item.targetReps} • Dinlenme: {item.restSec ?? 60}s
+              </Text>
+            ) : null}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => removeItem(item.id)}
+            style={{ alignSelf:'flex-end', marginTop:8, paddingVertical:6, paddingHorizontal:10, borderRadius:8, backgroundColor:'#fee2e2' }}
+          >
+            <Text style={{ color:'#b91c1c', fontWeight:'700' }}>Sil</Text>
+          </TouchableOpacity>
         </View>
       )}
     />

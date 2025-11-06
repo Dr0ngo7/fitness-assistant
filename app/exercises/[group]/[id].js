@@ -1,126 +1,106 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { doc, getDoc } from 'firebase/firestore';
-import { useEffect, useMemo, useState } from 'react';
+import { addDoc, collection, doc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Image, Linking, ScrollView, Text, TouchableOpacity, View } from 'react-native';
-import { EXERCISES } from '../../../constants/exercises';
 import { auth, db } from '../../../firebase';
-import { addPlanItemFS } from '../../../lib/programs';
 
-const LEVEL_LABEL = { beginner:'Yeni', intermediate:'Orta', advanced:'İleri' };
+const LEVEL_LABEL = { beginner: 'Yeni', intermediate: 'Orta', advanced: 'İleri' };
 
 export default function ExerciseDetail() {
-  const { group, id } = useLocalSearchParams();
+  const { group, id } = useLocalSearchParams(); // group burada yalnızca geri linki/etiket için
   const router = useRouter();
-  const [fsData, setFsData] = useState(null);
-  const [loading, setLoading] = useState(true);
 
+  const [ex, setEx] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState(null);
+
+  // 🔹 Firestore’dan docId ile oku
   useEffect(() => {
     let alive = true;
     (async () => {
       try {
+        setLoading(true);
         const snap = await getDoc(doc(db, 'exercises', String(id)));
-        if (alive && snap.exists()) {
-          const d = snap.data();
-          setFsData({
-            id: snap.id,
-            name: d.name || d.name_en || 'Egzersiz',
-            desc: d.desc || '',
-            group: d.group || String(group),
-            level: (d.level || 'Beginner').toString().toLowerCase(),
-            video: d.videoUrl || null,
-            thumb: (d.imageUrls && d.imageUrls[0]) || d.image || null,
-            raw: d,
-          });
+        if (!snap.exists()) {
+          throw new Error('not-found');
         }
-      } finally { if (alive) setLoading(false); }
+        const data = { id: snap.id, ...snap.data() };
+        // bazı alanları normalize et
+        data.level = String(data.level || 'beginner').toLowerCase();
+        data.group = String(data.group || group || 'genel');
+        setEx(data);
+      } catch (e) {
+        setErr(e);
+      } finally {
+        if (alive) setLoading(false);
+      }
     })();
     return () => { alive = false; };
   }, [id, group]);
 
-  const localData = useMemo(() => {
-    const byLevel = EXERCISES[group] || {};
-    for (const [lvl, arr] of Object.entries(byLevel)) {
-      const found = (arr || []).find((x) => String(x.id) === String(id));
-      if (found) {
-        return {
-          id: found.id, name: found.name, desc: found.desc || '', group: String(group),
-          level: String(lvl).toLowerCase(), video: found.video || null, thumb: found.image || null, raw: found
-        };
-      }
-    }
-    return null;
-  }, [group, id]);
-
-  const data = fsData || localData;
-
   const addToPlan = async () => {
-  try {
-    const payload = {
-      exerciseId: String(data?.id ?? id),
-      exerciseName: data?.name || 'Egzersiz',
-      group: String(data?.group || group),
-      level: data?.level || 'beginner',
-      targetSets: data?.raw?.metrics?.defaultSets ?? 3,
-      targetReps: data?.raw?.metrics?.defaultReps ?? '10-12',
-      restSec: data?.raw?.metrics?.defaultRestSec ?? 60,
-      tempo: data?.raw?.metrics?.defaultTempo ?? null,
-      thumb: data?.thumb || null,
-      addedAt: Date.now(),
-      source: fsData ? 'firestore' : 'local',
-    };
-
-    if (auth.currentUser) {
-      await addPlanItemFS(payload);      // → Firestore
-    } else {
-      const key='@plan';
-      const raw = await AsyncStorage.getItem(key);
-      const arr = raw ? JSON.parse(raw) : [];
-      await AsyncStorage.setItem(key, JSON.stringify([payload, ...arr])); // → Local
+    if (!auth.currentUser) {
+      Alert.alert('Uyarı', 'Programa eklemek için giriş yapmalısınız.');
+      return;
     }
+    try {
+      const uid = auth.currentUser.uid;
+      await addDoc(collection(db, `users/${uid}/plan_items`), {
+        exerciseId: ex.id,
+        exerciseName: ex.name || 'Egzersiz',
+        group: ex.group || 'genel',
+        level: ex.level || 'beginner',
+        targetSets: ex?.metrics?.defaultSets ?? 3,
+        targetReps: ex?.metrics?.defaultReps ?? '10-12',
+        restSec: ex?.metrics?.defaultRestSec ?? 60,
+        tempo: ex?.metrics?.defaultTempo ?? null,
+        thumb: Array.isArray(ex.imageUrls) ? ex.imageUrls[0] : (ex.thumb || null),
+        createdAt: serverTimestamp(),
+        source: 'firestore',
+      });
+      Alert.alert('Eklendi', `"${ex.name}" kişisel planınıza eklendi.`);
+    } catch (e) {
+      Alert.alert('Hata', 'Programa eklenemedi: ' + (e?.message || e));
+    }
+  };
 
-    Alert.alert('Eklendi', `"${payload.exerciseName}" programa eklendi.`);
-  } catch (e) {
-    Alert.alert('Hata', e.message || 'Programa eklenemedi.');
-  }
-};
+  if (loading) return <ActivityIndicator style={{ marginTop: 24 }} />;
 
-  if (loading && !localData) {
-    return (<View style={{ flex:1, justifyContent:'center', alignItems:'center', padding:16 }}>
-      <ActivityIndicator /><Text style={{ marginTop:8 }}>Yükleniyor…</Text></View>);
-  }
-
-  if (!data) {
-    return (<View style={{ flex:1, justifyContent:'center', alignItems:'center', padding:16 }}>
-      <Text style={{ fontSize:16, fontWeight:'700', marginBottom:8 }}>Egzersiz bulunamadı</Text>
-      <TouchableOpacity onPress={() => router.back()}
-        style={{ padding:10, backgroundColor:'#0ea5e9', borderRadius:10 }}>
-        <Text style={{ color:'#fff', fontWeight:'700' }}>Geri dön</Text>
-      </TouchableOpacity>
-    </View>);
+  if (!ex) {
+    return (
+      <View style={{ flex:1, justifyContent:'center', alignItems:'center', padding:16 }}>
+        <Text style={{ fontSize:16, fontWeight:'700', marginBottom:8 }}>Egzersiz bulunamadı</Text>
+        <TouchableOpacity onPress={() => router.back()} style={{ padding:10, backgroundColor:'#0ea5e9', borderRadius:10 }}>
+          <Text style={{ color:'#fff', fontWeight:'700' }}>Geri dön</Text>
+        </TouchableOpacity>
+        {!!err && <Text style={{ marginTop:10, opacity:0.7, fontSize:12 }}>Hata: {String(err.message || err)}</Text>}
+      </View>
+    );
   }
 
   return (
     <ScrollView contentContainerStyle={{ padding:16 }}>
-      <Text style={{ fontSize:22, fontWeight:'800' }}>{data.name}</Text>
+      {/* Kapak görseli (varsa) */}
+      { (Array.isArray(ex.imageUrls) && ex.imageUrls[0]) ?
+        <Image source={{ uri: ex.imageUrls[0] }} style={{ width:'100%', height:200, borderRadius:12, marginBottom:12 }} />
+        : null
+      }
+
+      <Text style={{ fontSize:22, fontWeight:'800' }}>{ex.name}</Text>
 
       <View style={{ flexDirection:'row', gap:8, marginTop:8 }}>
         <View style={{ paddingVertical:4, paddingHorizontal:10, backgroundColor:'#f1f5f9', borderRadius:999 }}>
-          <Text style={{ fontWeight:'700' }}>{data.group}</Text>
+          <Text style={{ fontWeight:'700' }}>{ex.group}</Text>
         </View>
         <View style={{
           paddingVertical:4, paddingHorizontal:10, borderRadius:999,
-          backgroundColor: data.level==='beginner'? '#dcfce7' : data.level==='intermediate'? '#e0e7ff' : '#fee2e2'
+          backgroundColor: ex.level==='beginner'? '#dcfce7' : ex.level==='intermediate'? '#e0e7ff' : '#fee2e2'
         }}>
-          <Text style={{ fontWeight:'700' }}>{LEVEL_LABEL[data.level] || data.level}</Text>
+          <Text style={{ fontWeight:'700' }}>{LEVEL_LABEL[ex.level] || ex.level}</Text>
         </View>
       </View>
 
-      {!!data.thumb && (
-        <Image source={{ uri: data.thumb }} style={{ width:'100%', height:200, borderRadius:12, marginTop:12 }} />
-      )}
-
-      {!!data.desc && <Text style={{ marginTop:14, fontSize:16, lineHeight:22 }}>{data.desc}</Text>}
+      {!!ex.desc && <Text style={{ marginTop:14, fontSize:16, lineHeight:22 }}>{ex.desc}</Text>}
 
       <View style={{ flexDirection:'row', gap:10, marginTop:16 }}>
         <TouchableOpacity onPress={addToPlan}
@@ -129,14 +109,25 @@ export default function ExerciseDetail() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={() => (data.video ? Linking.openURL(data.video) : Alert.alert('Video yok', 'Bağlantı eklenmemiş.'))}
+          onPress={() => {
+            const url = ex.videoUrl || ex.video || null;
+            url ? Linking.openURL(url) : Alert.alert('Video yok', 'Bağlantı eklenmemiş.');
+          }}
           style={{ backgroundColor:'#10b981', paddingVertical:10, paddingHorizontal:12, borderRadius:10 }}
         >
           <Text style={{ color:'#fff', fontWeight:'800' }}>Video</Text>
         </TouchableOpacity>
       </View>
 
-      <View style={{ height:24 }} />
+      {/* Varsayılan metrikleri göster */}
+      <View style={{ marginTop:16 }}>
+        <Text style={{ fontWeight:'700' }}>Önerilen:</Text>
+        <Text style={{ opacity:0.7, marginTop:4 }}>
+          Set: {ex?.metrics?.defaultSets ?? 3} • Tekrar: {ex?.metrics?.defaultReps ?? '10-12'} • Dinlenme: {ex?.metrics?.defaultRestSec ?? 60}s
+        </Text>
+      </View>
+
+      <View style={{ height:24 }}/>
     </ScrollView>
   );
 }

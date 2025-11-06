@@ -4,6 +4,7 @@ import { doc, setDoc } from 'firebase/firestore';
 import { useState } from 'react';
 import { Alert, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { auth, db } from '../../firebase';
+import { migrateLocalPlanToFS } from '../../lib/migrate';
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -18,6 +19,8 @@ export default function RegisterScreen() {
         createdAt: Date.now()
       });
       Alert.alert('Başarılı', 'Kayıt tamamlandı');
+      await migrateLocalPlanToFS();
+        router.replace('/(tabs)/musclemap');
       router.replace('/(tabs)/musclemap');
     } catch (e) {
       Alert.alert('Kayıt hatası', e.message || 'Hata');
