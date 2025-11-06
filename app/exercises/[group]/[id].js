@@ -3,8 +3,31 @@ import { addDoc, collection, doc, getDoc, serverTimestamp } from 'firebase/fires
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Image, Linking, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { auth, db } from '../../../firebase';
+import { EXERCISES } from '../../../constants/exercises'; // ⬅️ YEREL FALLBACK İÇİN
 
 const LEVEL_LABEL = { beginner: 'Yeni', intermediate: 'Orta', advanced: 'İleri' };
+
+/** Yerel fallback: constants içinden ara (tüm seviyelerde) */
+function findLocalExercise(groupSlug, id) {
+  const levels = EXERCISES?.[groupSlug] || {};
+  for (const [lv, arr] of Object.entries(levels)) {
+    const hit = (arr || []).find((x) => String(x.id) === String(id));
+    if (hit) {
+      return {
+        id: String(hit.id),
+        name: hit.name || '(İsimsiz)',
+        desc: hit.desc || '',
+        level: String(lv || 'beginner').toLowerCase(),
+        group: String(groupSlug || 'genel'),
+        imageUrls: hit.imageUrls || [],
+        videoUrl: hit.videoUrl || hit.video || null,
+        metrics: hit.metrics || {},
+        __source: 'local',
+      };
+    }
+  }
+  return null;
+}
 
 export default function ExerciseDetail() {
   const { group, id } = useLocalSearchParams(); // group burada yalnızca geri linki/etiket için
@@ -14,23 +37,32 @@ export default function ExerciseDetail() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState(null);
 
-  // 🔹 Firestore’dan docId ile oku
+  // 🔹 Firestore’dan docId ile oku → yoksa YEREL FALLBACK kullan
   useEffect(() => {
     let alive = true;
     (async () => {
       try {
         setLoading(true);
         const snap = await getDoc(doc(db, 'exercises', String(id)));
-        if (!snap.exists()) {
-          throw new Error('not-found');
+        if (snap.exists()) {
+          const data = { id: snap.id, ...snap.data() };
+          data.level = String(data.level || 'beginner').toLowerCase();
+          data.group = String(data.group || group || 'genel');
+          if (alive) setEx(data);
+        } else {
+          // ⬇️ Firestore yoksa yerelden getir
+          const localHit = findLocalExercise(String(group), String(id));
+          if (!localHit) throw new Error('not-found');
+          if (alive) setEx(localHit);
         }
-        const data = { id: snap.id, ...snap.data() };
-        // bazı alanları normalize et
-        data.level = String(data.level || 'beginner').toLowerCase();
-        data.group = String(data.group || group || 'genel');
-        setEx(data);
       } catch (e) {
-        setErr(e);
+        // ⬇️ Her hata durumunda da yereli dene (örn. offline)
+        const localHit = findLocalExercise(String(group), String(id));
+        if (localHit) {
+          if (alive) setEx(localHit);
+        } else {
+          setErr(e);
+        }
       } finally {
         if (alive) setLoading(false);
       }
@@ -56,7 +88,7 @@ export default function ExerciseDetail() {
         tempo: ex?.metrics?.defaultTempo ?? null,
         thumb: Array.isArray(ex.imageUrls) ? ex.imageUrls[0] : (ex.thumb || null),
         createdAt: serverTimestamp(),
-        source: 'firestore',
+        source: ex.__source || 'firestore',
       });
       Alert.alert('Eklendi', `"${ex.name}" kişisel planınıza eklendi.`);
     } catch (e) {

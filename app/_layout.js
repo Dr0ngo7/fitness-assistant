@@ -1,33 +1,40 @@
 // app/_layout.js
-import { Stack, useRouter, useSegments } from 'expo-router';
-import { onAuthStateChanged } from 'firebase/auth';
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, View } from 'react-native';
-import { auth } from '../firebase';
+import React from "react";
+import { Slot, usePathname } from "expo-router";
+import { StatusBar, View, Platform } from "react-native";
+import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function RootLayout() {
-  const [user, setUser] = useState(undefined); // undefined: kontrol
-  const router = useRouter();
-  const segments = useSegments();
+  return (
+    <SafeAreaProvider>
+      <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
+      <SafeTopWrapper>
+        <Slot />
+      </SafeTopWrapper>
+    </SafeAreaProvider>
+  );
+}
 
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => setUser(u ?? null));
-    return unsub;
-  }, []);
+function SafeTopWrapper({ children }) {
+  const insets = useSafeAreaInsets();
+  const pathname = usePathname();
 
-  useEffect(() => {
-    if (user === undefined) return;
-    const inAuth = segments[0] === 'auth';
-    if (!user && !inAuth) router.replace('/auth/login');
-    if (user && inAuth) router.replace('/(tabs)/musclemap');
-  }, [user, segments]);
+  // sadece musclemap ekranında üst boşluk olmasın
+  const exclude =
+    pathname?.includes("/musclemap") || pathname === "/musclemap";
 
-  if (user === undefined) {
-    return (
-      <View style={{ flex:1, justifyContent:'center', alignItems:'center' }}>
-        <ActivityIndicator />
-      </View>
-    );
-  }
-  return <Stack screenOptions={{ headerShown:false }} />;
+  // sade, sabit bir buffer
+  const paddingTop = exclude ? 0 : 8;
+
+  return (
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: "#f8fafc",
+        paddingTop,
+      }}
+    >
+      {children}
+    </View>
+  );
 }
