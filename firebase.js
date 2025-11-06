@@ -1,14 +1,19 @@
-// firebase.js
-import AsyncStorage from '@react-native-async-storage/async-storage';
+// firebase.js (Cross-Platform Persistence)
 import { initializeApp } from 'firebase/app';
 import {
-  getReactNativePersistence,
-  initializeAuth
+  browserLocalPersistence,
+  getAuth,
+  initializeAuth,
+  setPersistence,
 } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
+import { Platform } from 'react-native';
 
-// 🔹 senin Firebase config'ini buraya koy (console’dan)
+// AsyncStorage sadece native'de gerekli:
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getReactNativePersistence } from 'firebase/auth';
+
 const firebaseConfig = {
   apiKey: "AIzaSyBUEWArOVRuwD67CLUMYYH3FS6XapmvRF4",
   authDomain: "fitness-assistant-30490.firebaseapp.com",
@@ -20,10 +25,19 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-// 🔹 React Native’de kalıcı oturum
-export const auth = initializeAuth(app, {
-  persistence: getReactNativePersistence(AsyncStorage)
-});
+let auth;
+if (Platform.OS === 'web') {
+  // Web: browserLocalPersistence
+  auth = getAuth(app);
+  // setPersistence async'tir; beklemeye gerek yok, arka planda ayarlanır.
+  setPersistence(auth, browserLocalPersistence).catch(() => {});
+} else {
+  // Native: RN persistence
+  auth = initializeAuth(app, {
+    persistence: getReactNativePersistence(AsyncStorage),
+  });
+}
 
+export { auth };
 export const db = getFirestore(app);
 export const storage = getStorage(app);
