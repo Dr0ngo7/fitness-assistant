@@ -14,8 +14,6 @@ export default function LoginScreen() {
     try {
       await signInWithEmailAndPassword(auth, email.trim(), pass);
       await migrateLocalPlanToFS();
-        router.replace('/(tabs)/musclemap');
-
       router.replace('/(tabs)/musclemap');
     } catch (e) {
       Alert.alert('Giriş başarısız', e.message || 'Hata');

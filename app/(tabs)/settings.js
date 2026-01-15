@@ -1,5 +1,6 @@
 // app/(tabs)/settings.js
 import React, { useMemo, useState } from "react";
+
 import {
   View,
   Text,
@@ -157,9 +158,11 @@ export default function SettingsScreen() {
         <Card>
           <Text style={{ fontSize: 14, opacity: 0.6, marginBottom: 4 }}>E-posta</Text>
           <Text style={{ fontSize: 16, fontWeight: "600" }}>{email}</Text>
+          
         </Card>
+        
 
-        {/* Şifre Değiştir (Accordion) */}
+        {/* Şifre Değiştir */}
         <Card>
           <HeaderButton title="Şifre Değiştir" open={openPassword} onPress={togglePassword} />
           {openPassword && (
@@ -225,7 +228,7 @@ export default function SettingsScreen() {
           )}
         </Card>
 
-        {/* Hesap (Accordion) */}
+        
         <Card>
           <HeaderButton title="Hesap" open={openAccount} onPress={toggleAccount} />
           {openAccount && (
@@ -250,6 +253,7 @@ export default function SettingsScreen() {
             </View>
           )}
         </Card>
+        
       </ScrollView>
     </KeyboardAvoidingView>
   );

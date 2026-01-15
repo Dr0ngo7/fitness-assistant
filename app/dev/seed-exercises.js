@@ -1,4 +1,4 @@
-import { addDoc, collection, getDocs, query, serverTimestamp, where } from 'firebase/firestore';
+import { collection, doc, getDocs, query, serverTimestamp, setDoc, where } from 'firebase/firestore';
 import { useState } from 'react';
 import { Alert, Pressable, ScrollView, Text } from 'react-native';
 import { db } from '../../firebase';
@@ -12,7 +12,7 @@ const EXERCISES = [
     desc:'Düz sehpa bar press.', cues:['Omuzları ger','Dirsekleri çok açma'],
     steps:['Benche uzan','Barı kontrollü indir','Göğüsten it'],
     contraindications:['Omuz problemi'],
-    videoUrl:'https://youtu.be/xxx', imageUrls:[],
+    videoUrl:'https://youtu.be/xxx',
     imageUrls:['https://.../bench-thumb.jpg'],
     metrics:{ defaultSets:4, defaultReps:'6-8', defaultRestSec:120, defaultTempo:'2-0-1' },
     tags:['strength','chest','compound'], status:true, version:1
@@ -25,7 +25,8 @@ const EXERCISES = [
     desc:'Vücut ağırlığıyla şınav.', cues:['Vücudu düz tut','Dirsek çizgisine dikkat'],
     steps:['Plank pozisyonu','Dirsekleri bük','Yukarı it'],
     contraindications:[],
-    videoUrl:'https://youtu.be/yyy', imageUrls:[],
+    videoUrl:'https://youtu.be/yyy',
+    imageUrls:[],
     metrics:{ defaultSets:3, defaultReps:'10-15', defaultRestSec:60, defaultTempo:'2-0-1' },
     tags:['bodyweight','chest'], status:true, version:1
   },
@@ -37,12 +38,38 @@ const EXERCISES = [
     desc:'Dumbbell ile fly.', cues:['Kollar hafif bükük','Omuzları sıkıştır'],
     steps:['Benche uzan','Kolları aç','Kapat'],
     contraindications:['Omuz sıkışması'],
-    videoUrl:'https://youtu.be/zzz', imageUrls:[],
+    videoUrl:'https://youtu.be/zzz',
+    imageUrls:[],
     metrics:{ defaultSets:3, defaultReps:'10-12', defaultRestSec:60, defaultTempo:'2-1-2' },
     tags:['isolation','chest'], status:true, version:1
   },
-  // İstersen aynı kalıpla sırt/omuz/bacak için de 6-9 egzersiz ekleyebilirsin.
 ];
+
+const normalizeLevel = (lvl) => {
+  const s = String(lvl || '').trim().toLowerCase();
+  if (s === 'beginner' || s === 'yeni' || s.startsWith('beg')) return 'beginner';
+  if (s === 'intermediate' || s === 'orta' || s.startsWith('int')) return 'intermediate';
+  if (s === 'advanced' || s === 'ileri' || s.startsWith('adv')) return 'advanced';
+  return 'beginner';
+};
+
+const normalizeExercise = (ex) => {
+  const slug = String(ex.slug || '').trim();
+  return {
+    ...ex,
+    slug,
+    level: normalizeLevel(ex.level),
+    status: ex.status ?? true,
+    secondaryGroups: Array.isArray(ex.secondaryGroups) ? ex.secondaryGroups : [],
+    stabilizers: Array.isArray(ex.stabilizers) ? ex.stabilizers : [],
+    cues: Array.isArray(ex.cues) ? ex.cues : [],
+    steps: Array.isArray(ex.steps) ? ex.steps : [],
+    contraindications: Array.isArray(ex.contraindications) ? ex.contraindications : [],
+    tags: Array.isArray(ex.tags) ? ex.tags : [],
+    imageUrls: Array.isArray(ex.imageUrls) ? ex.imageUrls : [],
+    metrics: ex.metrics ?? {},
+  };
+};
 
 export default function SeedExercisesScreen() {
   const [busy, setBusy] = useState(false);
@@ -51,32 +78,58 @@ export default function SeedExercisesScreen() {
   const runSeed = async () => {
     try {
       setBusy(true);
+
       const col = collection(db, 'exercises');
+
       for (const ex of EXERCISES) {
-        await addDoc(col, {
-          ...ex,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        });
-        console.log('EX:', ex.slug);
+        const clean = normalizeExercise(ex);
+        if (!clean.slug) continue;
+
+        // createdAt'ı ilk eklemede koymak için merge + fallback yaklaşımı:
+        await setDoc(
+          doc(col, clean.slug),
+          {
+            ...clean,
+            // createdAt var ise dokunma, yoksa oluştur:
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          },
+          { merge: true }
+        );
+
+        console.log('EX upsert:', clean.slug);
       }
-      const snap = await getDocs(query(col, where('group','==','gogus')));
+
+      const snap = await getDocs(query(col, where('group', '==', 'gogus')));
       setCount(snap.size);
-      Alert.alert('Tamam', `Egzersizler eklendi. Göğüs sayısı: ${snap.size}`);
+      Alert.alert('Tamam', `Egzersizler upsert edildi. Göğüs sayısı: ${snap.size}`);
     } catch (e) {
       console.error(e);
       Alert.alert('Hata', String(e?.message || e));
-    } finally { setBusy(false); }
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
-    <ScrollView contentContainerStyle={{ padding:16, gap:12 }}>
-      <Text style={{ fontSize:20, fontWeight:'700' }}>Egzersiz Seed (Göğüs örnekleri)</Text>
-      <Pressable disabled={busy} onPress={runSeed}
-        style={{ backgroundColor:'#0a84ff', opacity:busy?0.6:1, padding:14, borderRadius:12, alignItems:'center' }}>
-        <Text style={{ color:'#fff', fontWeight:'700' }}>{busy?'Yazılıyor…':'Seed Et'}</Text>
+    <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
+      <Text style={{ fontSize: 20, fontWeight: '700' }}>Egzersiz Seed (Stabil Upsert)</Text>
+
+      <Pressable
+        disabled={busy}
+        onPress={runSeed}
+        style={{
+          backgroundColor: '#0a84ff',
+          opacity: busy ? 0.6 : 1,
+          padding: 14,
+          borderRadius: 12,
+          alignItems: 'center',
+        }}
+      >
+        <Text style={{ color: '#fff', fontWeight: '700' }}>{busy ? 'Yazılıyor…' : 'Seed Et (Upsert)'}</Text>
       </Pressable>
-      <Text>Göğüs egzersizi sayısı (yenile sonra güncellenir): {count}</Text>
+
+      <Text>Göğüs egzersizi sayısı: {count}</Text>
     </ScrollView>
   );
 }

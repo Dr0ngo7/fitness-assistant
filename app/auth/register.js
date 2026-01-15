@@ -20,7 +20,6 @@ export default function RegisterScreen() {
       });
       Alert.alert('Başarılı', 'Kayıt tamamlandı');
       await migrateLocalPlanToFS();
-        router.replace('/(tabs)/musclemap');
       router.replace('/(tabs)/musclemap');
     } catch (e) {
       Alert.alert('Kayıt hatası', e.message || 'Hata');
