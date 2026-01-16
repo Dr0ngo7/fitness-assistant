@@ -1,165 +1,140 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { addDoc, collection, doc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Image, Linking, ScrollView, Text, TouchableOpacity, View } from 'react-native';
-import { auth, db } from '../../../firebase';
-import { EXERCISES } from '../../../constants/exercises'; // ⬅️ YEREL FALLBACK İÇİN
+import {
+  Alert, Image, ScrollView, Text,
+  TouchableOpacity, View, ActivityIndicator, StyleSheet, SafeAreaView, Linking
+} from 'react-native';
+import { db } from '../../../firebase';
+import { Ionicons } from '@expo/vector-icons';
+import AddToPlanModal from '../../../components/AddToPlanModal';
 
-const LEVEL_LABEL = { beginner: 'Yeni', intermediate: 'Orta', advanced: 'İleri' };
-
-/** Yerel fallback: constants içinden ara (tüm seviyelerde) */
-function findLocalExercise(groupSlug, id) {
-  const levels = EXERCISES?.[groupSlug] || {};
-  for (const [lv, arr] of Object.entries(levels)) {
-    const hit = (arr || []).find((x) => String(x.id) === String(id));
-    if (hit) {
-      return {
-        id: String(hit.id),
-        name: hit.name || '(İsimsiz)',
-        desc: hit.desc || '',
-        level: String(lv || 'beginner').toLowerCase(),
-        group: String(groupSlug || 'genel'),
-        imageUrls: hit.imageUrls || [],
-        videoUrl: hit.videoUrl || hit.video || null,
-        metrics: hit.metrics || {},
-        __source: 'local',
-      };
-    }
-  }
-  return null;
-}
-
-export default function ExerciseDetail() {
-  const { group, id } = useLocalSearchParams(); // group burada yalnızca geri linki/etiket için
+export default function ExerciseDetailScreen() {
+  const { id, group } = useLocalSearchParams();
   const router = useRouter();
 
-  const [ex, setEx] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState(null);
+  const [exercise, setExercise] = useState(null);
+  const [addModalVisible, setAddModalVisible] = useState(false);
 
-  // 🔹 Firestore’dan docId ile oku → yoksa YEREL FALLBACK kullan
   useEffect(() => {
-    let alive = true;
-    (async () => {
+    const fetchExercise = async () => {
       try {
-        setLoading(true);
-        const snap = await getDoc(doc(db, 'exercises', String(id)));
+        const docRef = doc(db, 'exercises', id);
+        const snap = await getDoc(docRef);
         if (snap.exists()) {
-          const data = { id: snap.id, ...snap.data() };
-          data.level = String(data.level || 'beginner').toLowerCase();
-          data.group = String(data.group || group || 'genel');
-          if (alive) setEx(data);
+          setExercise({ id: snap.id, ...snap.data() });
         } else {
-          // ⬇️ Firestore yoksa yerelden getir
-          const localHit = findLocalExercise(String(group), String(id));
-          if (!localHit) throw new Error('not-found');
-          if (alive) setEx(localHit);
+          Alert.alert("Hata", "Egzersiz bulunamadı.");
+          router.back();
         }
-      } catch (e) {
-        // ⬇️ Her hata durumunda da yereli dene (örn. offline)
-        const localHit = findLocalExercise(String(group), String(id));
-        if (localHit) {
-          if (alive) setEx(localHit);
-        } else {
-          setErr(e);
-        }
+      } catch (error) {
+        console.error(error);
+        Alert.alert("Hata", "Veri yüklenemedi.");
       } finally {
-        if (alive) setLoading(false);
+        setLoading(false);
       }
-    })();
-    return () => { alive = false; };
-  }, [id, group]);
+    };
+    fetchExercise();
+  }, [id]);
 
-  const addToPlan = async () => {
-    if (!auth.currentUser) {
-      Alert.alert('Uyarı', 'Programa eklemek için giriş yapmalısınız.');
-      return;
-    }
-    try {
-      const uid = auth.currentUser.uid;
-      await addDoc(collection(db, `users/${uid}/plan_items`), {
-        exerciseId: ex.id,
-        exerciseName: ex.name || 'Egzersiz',
-        group: ex.group || 'genel',
-        level: ex.level || 'beginner',
-        targetSets: ex?.metrics?.defaultSets ?? 3,
-        targetReps: ex?.metrics?.defaultReps ?? '10-12',
-        restSec: ex?.metrics?.defaultRestSec ?? 60,
-        tempo: ex?.metrics?.defaultTempo ?? null,
-        thumb: Array.isArray(ex.imageUrls) ? ex.imageUrls[0] : (ex.thumb || null),
-        createdAt: serverTimestamp(),
-        source: ex.__source || 'firestore',
-      });
-      Alert.alert('Eklendi', `"${ex.name}" kişisel planınıza eklendi.`);
-    } catch (e) {
-      Alert.alert('Hata', 'Programa eklenemedi: ' + (e?.message || e));
+  const openVideo = () => {
+    if (exercise?.video) {
+      Linking.openURL(exercise.video);
+    } else {
+      Alert.alert("Video Yok", "Bu egzersiz için video bulunamadı.");
     }
   };
 
-  if (loading) return <ActivityIndicator style={{ marginTop: 24 }} />;
-
-  if (!ex) {
+  if (loading) {
     return (
-      <View style={{ flex:1, justifyContent:'center', alignItems:'center', padding:16 }}>
-        <Text style={{ fontSize:16, fontWeight:'700', marginBottom:8 }}>Egzersiz bulunamadı</Text>
-        <TouchableOpacity onPress={() => router.back()} style={{ padding:10, backgroundColor:'#0ea5e9', borderRadius:10 }}>
-          <Text style={{ color:'#fff', fontWeight:'700' }}>Geri dön</Text>
-        </TouchableOpacity>
-        {!!err && <Text style={{ marginTop:10, opacity:0.7, fontSize:12 }}>Hata: {String(err.message || err)}</Text>}
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color="#007AFF" />
       </View>
     );
   }
 
+  if (!exercise) return null;
+
   return (
-    <ScrollView contentContainerStyle={{ padding:16 }}>
-      {/* Kapak görseli (varsa) */}
-      { (Array.isArray(ex.imageUrls) && ex.imageUrls[0]) ?
-        <Image source={{ uri: ex.imageUrls[0] }} style={{ width:'100%', height:200, borderRadius:12, marginBottom:12 }} />
-        : null
-      }
-
-      <Text style={{ fontSize:22, fontWeight:'800' }}>{ex.name}</Text>
-
-      <View style={{ flexDirection:'row', gap:8, marginTop:8 }}>
-        <View style={{ paddingVertical:4, paddingHorizontal:10, backgroundColor:'#f1f5f9', borderRadius:999 }}>
-          <Text style={{ fontWeight:'700' }}>{ex.group}</Text>
-        </View>
-        <View style={{
-          paddingVertical:4, paddingHorizontal:10, borderRadius:999,
-          backgroundColor: ex.level==='beginner'? '#dcfce7' : ex.level==='intermediate'? '#e0e7ff' : '#fee2e2'
-        }}>
-          <Text style={{ fontWeight:'700' }}>{LEVEL_LABEL[ex.level] || ex.level}</Text>
-        </View>
-      </View>
-
-      {!!ex.desc && <Text style={{ marginTop:14, fontSize:16, lineHeight:22 }}>{ex.desc}</Text>}
-
-      <View style={{ flexDirection:'row', gap:10, marginTop:16 }}>
-        <TouchableOpacity onPress={addToPlan}
-          style={{ backgroundColor:'#0ea5e9', paddingVertical:10, paddingHorizontal:12, borderRadius:10 }}>
-          <Text style={{ color:'#fff', fontWeight:'800' }}>Programa Ekle</Text>
+    <SafeAreaView style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+          <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={() => {
-            const url = ex.videoUrl || ex.video || null;
-            url ? Linking.openURL(url) : Alert.alert('Video yok', 'Bağlantı eklenmemiş.');
-          }}
-          style={{ backgroundColor:'#10b981', paddingVertical:10, paddingHorizontal:12, borderRadius:10 }}
-        >
-          <Text style={{ color:'#fff', fontWeight:'800' }}>Video</Text>
+        <Text style={styles.headerTitle}>{exercise.name}</Text>
+        <TouchableOpacity onPress={() => setAddModalVisible(true)} style={styles.addBtnHeader}>
+          <Ionicons name="add-circle-outline" size={28} color="#007AFF" />
         </TouchableOpacity>
       </View>
 
-      {/* Varsayılan metrikleri göster */}
-      <View style={{ marginTop:16 }}>
-        <Text style={{ fontWeight:'700' }}>Önerilen:</Text>
-        <Text style={{ opacity:0.7, marginTop:4 }}>
-          Set: {ex?.metrics?.defaultSets ?? 3} • Tekrar: {ex?.metrics?.defaultReps ?? '10-12'} • Dinlenme: {ex?.metrics?.defaultRestSec ?? 60}s
-        </Text>
-      </View>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Image/Video Placeholder */}
+        {exercise.thumb ? (
+          <Image source={{ uri: exercise.thumb }} style={styles.image} resizeMode="cover" />
+        ) : (
+          <View style={styles.imagePlaceholder}>
+            <Ionicons name="image-outline" size={64} color="#ccc" />
+            <Text style={{ color: '#999', marginTop: 10 }}>Görsel Yok</Text>
+          </View>
+        )}
 
-      <View style={{ height:24 }}/>
-    </ScrollView>
+        {/* Info Section */}
+        <View style={styles.infoCard}>
+          <View style={[styles.badge, styles.badgeBlue]}>
+            <Text style={styles.badgeText}>{group?.toUpperCase()}</Text>
+          </View>
+
+          <Text style={styles.sectionTitle}>Talimatlar</Text>
+          <Text style={styles.description}>
+            {exercise.description || "Açıklama bulunmuyor."}
+          </Text>
+
+          <TouchableOpacity style={styles.videoBtn} onPress={openVideo}>
+            <Ionicons name="logo-youtube" size={24} color="#fff" />
+            <Text style={styles.videoBtnText}>Videolu Anlatım İzle</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+
+      <AddToPlanModal
+        visible={addModalVisible}
+        onClose={() => setAddModalVisible(false)}
+        exerciseData={exercise}
+      />
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#fff' },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+
+  header: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#eee'
+  },
+  headerTitle: { fontSize: 18, fontWeight: 'bold', flex: 1, textAlign: 'center' },
+  backBtn: { padding: 4 },
+  addBtnHeader: { padding: 4 },
+
+  scrollContent: { paddingBottom: 40 },
+
+  image: { width: '100%', height: 250, backgroundColor: '#f0f0f0' },
+  imagePlaceholder: { width: '100%', height: 250, backgroundColor: '#f9f9f9', justifyContent: 'center', alignItems: 'center' },
+
+  infoCard: { padding: 20 },
+  badge: { alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12, marginBottom: 16 },
+  badgeBlue: { backgroundColor: '#eef2ff' },
+  badgeText: { color: '#007AFF', fontWeight: '700', fontSize: 12 },
+
+  sectionTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 10, color: '#333' },
+  description: { fontSize: 16, lineHeight: 24, color: '#444', marginBottom: 20 },
+
+  videoBtn: {
+    backgroundColor: '#FF0000', flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    padding: 16, borderRadius: 12
+  },
+  videoBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 16, marginLeft: 10 }
+});
