@@ -1,6 +1,6 @@
 // app/_layout.js
 import React from "react";
-import { Slot, usePathname } from "expo-router";
+import { Stack, usePathname } from "expo-router";
 import { StatusBar, View, Platform } from "react-native";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -9,7 +9,11 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
       <SafeTopWrapper>
-        <Slot />
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="auth" options={{ headerShown: false }} />
+          {/* Other screens will default to headerShown: false due to screenOptions */}
+        </Stack>
       </SafeTopWrapper>
     </SafeAreaProvider>
   );

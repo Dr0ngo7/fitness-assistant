@@ -24,13 +24,14 @@ const MUSCLE_GROUPS = {
 };
 
 // 2. Route Mapping: Group Name -> Route Parameter (Slug in your DB)
+// 2. Route Mapping: Group Name -> Route Parameter (Slug in your DB)
 const GROUP_TO_ROUTE = {
-  Chest: "gogus",
-  Back: "sirt",
-  Shoulders: "omuz",
+  Chest: "chest",
+  Back: "back",
+  Shoulders: "shoulders",
   Arms: "arms",
-  Legs: "bacak",
-  Core: "karin",
+  Legs: "legs",
+  Core: "core",
 };
 
 // 3. Reverse Lookup: Muscle Slug -> Group Name

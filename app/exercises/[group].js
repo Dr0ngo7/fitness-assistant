@@ -8,9 +8,9 @@ import { db } from '../../firebase';
 const prettyLevel = (lvl) => {
   const s = String(lvl || '').toLowerCase();
   return s === 'beginner' ? 'Yeni'
-       : s === 'intermediate' ? 'Orta'
-       : s === 'advanced' ? 'İleri'
-       : s;
+    : s === 'intermediate' ? 'Orta'
+      : s === 'advanced' ? 'İleri'
+        : s;
 };
 
 // “arms” => birden çok gerçek grubu birlikte listele
@@ -35,22 +35,12 @@ export default function GroupListScreen() {
         const col = collection(db, 'exercises');
         const g = String(group || '').toLowerCase();
 
-        let q;
-        if (VIRTUAL[g]) {
-          // “arms” için biceps+triceps+onkol’u birlikte çekiyoruz
-          q = query(
-            col,
-            where('group', 'in', VIRTUAL[g]),
-            where('status', '==', true)
-          );
-        } else {
-          // normal tek grup
-          q = query(
-            col,
-            where('group', '==', g),
-            where('status', '==', true)
-          );
-        }
+        // Basitleştirilmiş sorgu: Doğrudan grup eşleşmesi
+        const q = query(
+          col,
+          where('group', '==', g),
+          where('status', '==', true)
+        );
 
         const snap = await getDocs(q);
         const list = snap.docs
@@ -78,8 +68,8 @@ export default function GroupListScreen() {
   }, [group]);
 
   if (loading && !items) return <ActivityIndicator style={{ marginTop: 24 }} />;
-  if (err) return <Text style={{ color:'red', padding:16 }}>Hata: {String(err.message || err)}</Text>;
-  if (!items || !items.length) return <Text style={{ padding:16 }}>Bu kas grubu için egzersiz bulunamadı.</Text>;
+  if (err) return <Text style={{ color: 'red', padding: 16 }}>Hata: {String(err.message || err)}</Text>;
+  if (!items || !items.length) return <Text style={{ padding: 16 }}>Bu kas grubu için egzersiz bulunamadı.</Text>;
 
   return (
     <FlatList
@@ -90,22 +80,22 @@ export default function GroupListScreen() {
         <TouchableOpacity
           onPress={() => router.push(`/exercises/${item.group || group}/${item.id}`)}
           style={{
-            flexDirection:'row',
-            gap:10,
-            borderWidth:1,
-            borderColor:'#e5e7eb',
-            borderRadius:12,
-            padding:12,
-            backgroundColor:'#fff'
+            flexDirection: 'row',
+            gap: 10,
+            borderWidth: 1,
+            borderColor: '#e5e7eb',
+            borderRadius: 12,
+            padding: 12,
+            backgroundColor: '#fff'
           }}
         >
           {!!item.thumb && (
-            <Image source={{ uri: item.thumb }} style={{ width:56, height:56, borderRadius:8 }} />
+            <Image source={{ uri: item.thumb }} style={{ width: 56, height: 56, borderRadius: 8 }} />
           )}
-          <View style={{ flex:1 }}>
-            <Text style={{ fontWeight:'800', fontSize:16 }}>{item.name}</Text>
-            {!!item.desc && <Text style={{ opacity:0.8, marginTop:4 }} numberOfLines={2}>{item.desc}</Text>}
-            <Text style={{ opacity:0.6, marginTop:6, fontSize:12 }}>Seviye: {prettyLevel(item.level)}</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontWeight: '800', fontSize: 16 }}>{item.name}</Text>
+            {!!item.desc && <Text style={{ opacity: 0.8, marginTop: 4 }} numberOfLines={2}>{item.desc}</Text>}
+            <Text style={{ opacity: 0.6, marginTop: 6, fontSize: 12 }}>Seviye: {prettyLevel(item.level)}</Text>
           </View>
         </TouchableOpacity>
       )}

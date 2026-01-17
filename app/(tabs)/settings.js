@@ -117,9 +117,9 @@ export default function SettingsScreen() {
     } catch (e) {
       const msg =
         e?.code === "auth/wrong-password" ? "Mevcut şifre yanlış."
-        : e?.code === "auth/too-many-requests" ? "Çok fazla deneme. Bir süre sonra tekrar deneyin."
-        : e?.code === "auth/requires-recent-login" ? "Güvenlik için tekrar giriş yapın ve yeniden deneyin."
-        : e?.message ?? "Şifre güncellenemedi.";
+          : e?.code === "auth/too-many-requests" ? "Çok fazla deneme. Bir süre sonra tekrar deneyin."
+            : e?.code === "auth/requires-recent-login" ? "Güvenlik için tekrar giriş yapın ve yeniden deneyin."
+              : e?.message ?? "Şifre güncellenemedi.";
       Alert.alert("Hata", msg);
     } finally {
       setBusy(false);
@@ -158,9 +158,9 @@ export default function SettingsScreen() {
         <Card>
           <Text style={{ fontSize: 14, opacity: 0.6, marginBottom: 4 }}>E-posta</Text>
           <Text style={{ fontSize: 16, fontWeight: "600" }}>{email}</Text>
-          
+
         </Card>
-        
+
 
         {/* Şifre Değiştir */}
         <Card>
@@ -228,7 +228,7 @@ export default function SettingsScreen() {
           )}
         </Card>
 
-        
+
         <Card>
           <HeaderButton title="Hesap" open={openAccount} onPress={toggleAccount} />
           {openAccount && (
@@ -253,7 +253,36 @@ export default function SettingsScreen() {
             </View>
           )}
         </Card>
-        
+
+        {/* Geliştirici Araçları */}
+        <Card>
+          <Text style={{ fontSize: 18, fontWeight: "700", marginBottom: 12 }}>Geliştirici Araçları</Text>
+          <TouchableOpacity
+            onPress={() => router.push("/dev/seed-exercises")}
+            style={{
+              backgroundColor: "#6366f1",
+              paddingVertical: 12,
+              borderRadius: 12,
+              alignItems: "center",
+              marginBottom: 10,
+            }}
+          >
+            <Text style={{ color: "white", fontWeight: "700" }}>Egzersiz Seed Ekranı</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => router.push("/dev/seed-recommended-page")}
+            style={{
+              backgroundColor: "#8b5cf6",
+              paddingVertical: 12,
+              borderRadius: 12,
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ color: "white", fontWeight: "700" }}>Önerilen Programları Seed Et</Text>
+          </TouchableOpacity>
+        </Card>
+
       </ScrollView>
     </KeyboardAvoidingView>
   );
