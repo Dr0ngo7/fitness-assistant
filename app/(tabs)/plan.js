@@ -4,6 +4,7 @@ import { useCallback, useState, useEffect } from 'react';
 import { FlatList, Text, TouchableOpacity, View, StyleSheet, SafeAreaView, ActivityIndicator, Image, ScrollView } from 'react-native';
 import { auth, db } from '../../firebase';
 import { Ionicons } from '@expo/vector-icons';
+import Colors from '../../constants/Colors';
 
 export default function PlanDashboard() {
   const router = useRouter();
@@ -69,7 +70,7 @@ export default function PlanDashboard() {
     if (loadingMyPlans) {
       return (
         <View style={styles.center}>
-          <ActivityIndicator size="large" color="#007AFF" />
+          <ActivityIndicator size="large" color={Colors.dark.primary} />
         </View>
       );
     }
@@ -103,7 +104,7 @@ export default function PlanDashboard() {
             onPress={() => router.push(`/plan/${item.id}`)}
           >
             <View style={styles.cardIcon}>
-              <Ionicons name="barbell" size={24} color="#007AFF" />
+              <Ionicons name="barbell" size={24} color={Colors.dark.primary} />
             </View>
             <View style={styles.cardContent}>
               <Text style={styles.cardTitle}>{item.title}</Text>
@@ -111,7 +112,7 @@ export default function PlanDashboard() {
                 Oluşturulma: {item.createdAt?.toDate ? item.createdAt.toDate().toLocaleDateString('tr-TR') : 'Bugün'}
               </Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color="#ccc" />
+            <Ionicons name="chevron-forward" size={20} color={Colors.dark.textSecondary} />
           </TouchableOpacity>
         )}
       />
@@ -122,7 +123,7 @@ export default function PlanDashboard() {
     if (loadingRecommended) {
       return (
         <View style={styles.center}>
-          <ActivityIndicator size="large" color="#007AFF" />
+          <ActivityIndicator size="large" color={Colors.dark.primary} />
         </View>
       );
     }
@@ -189,7 +190,7 @@ export default function PlanDashboard() {
           style={styles.fab}
           onPress={() => router.push('/plan/new')}
         >
-          <Ionicons name="add" size={30} color="#fff" />
+          <Ionicons name="add" size={30} color={Colors.dark.background} />
           <Text style={styles.fabText}>Yeni Plan</Text>
         </TouchableOpacity>
       )}
@@ -198,10 +199,10 @@ export default function PlanDashboard() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8f9fa' },
+  container: { flex: 1, backgroundColor: Colors.dark.background },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 
-  headerContainer: { backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#eee' },
+  headerContainer: { backgroundColor: Colors.dark.surface, borderBottomWidth: 1, borderBottomColor: Colors.dark.border },
   tabContainer: { flexDirection: 'row', paddingHorizontal: 20, paddingTop: 10 },
   tabButton: {
     marginRight: 20,
@@ -210,15 +211,15 @@ const styles = StyleSheet.create({
     borderBottomColor: 'transparent',
   },
   activeTabButton: {
-    borderBottomColor: '#007AFF',
+    borderBottomColor: Colors.dark.primary,
   },
   tabText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#888',
+    color: Colors.dark.textSecondary,
   },
   activeTabText: {
-    color: '#111',
+    color: Colors.dark.text,
   },
 
   listContent: { padding: 20, paddingBottom: 100 },
@@ -226,16 +227,17 @@ const styles = StyleSheet.create({
   // My Plans Card Styles
   card: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#fff', padding: 16, borderRadius: 16, marginBottom: 12,
-    elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4
+    backgroundColor: Colors.dark.surface, padding: 16, borderRadius: 16, marginBottom: 12,
+    borderWidth: 1, borderColor: Colors.dark.border,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4 // Dark shadow
   },
   cardIcon: {
-    width: 48, height: 48, borderRadius: 12, backgroundColor: '#eef6ff',
+    width: 48, height: 48, borderRadius: 12, backgroundColor: '#333',
     justifyContent: 'center', alignItems: 'center', marginRight: 15
   },
   cardContent: { flex: 1 },
-  cardTitle: { fontSize: 16, fontWeight: '700', color: '#333', marginBottom: 4 },
-  cardDate: { fontSize: 13, color: '#888' },
+  cardTitle: { fontSize: 16, fontWeight: '700', color: Colors.dark.text, marginBottom: 4 },
+  cardDate: { fontSize: 13, color: Colors.dark.textSecondary },
 
   // Recommended Card Styles
   recCard: {
@@ -243,28 +245,28 @@ const styles = StyleSheet.create({
     backgroundColor: '#333',
     elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8
   },
-  recImage: { width: '100%', height: '100%', position: 'absolute' },
-  recOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.45)' },
+  recImage: { width: '100%', height: '100%', position: 'absolute', opacity: 0.6 }, // Dim image slightly
+  recOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.3)' },
   recContent: { flex: 1, padding: 20, justifyContent: 'flex-end' },
   recTitle: { color: '#fff', fontSize: 22, fontWeight: '800', marginBottom: 6 },
   recSubtitle: { color: '#eee', fontSize: 14, marginBottom: 12, lineHeight: 20 },
   recTags: { flexDirection: 'row', marginBottom: 10 },
-  tagBadge: { backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, marginRight: 8, backdropFilter: 'blur(10px)' },
-  tagText: { color: '#fff', fontSize: 12, fontWeight: '600' },
+  tagBadge: { backgroundColor: 'rgba(0,0,0,0.6)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, marginRight: 8, borderWidth: 1, borderColor: Colors.dark.border },
+  tagText: { color: Colors.dark.primary, fontSize: 12, fontWeight: '600' },
   recFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
   recAuthor: { color: '#ddd', fontSize: 12 },
-  recDuration: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
+  recDuration: { color: Colors.dark.primary, fontSize: 12, fontWeight: 'bold' },
 
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 },
-  emptyText: { fontSize: 18, fontWeight: '600', color: '#333', marginTop: 20 },
-  emptySubText: { fontSize: 14, color: '#666', textAlign: 'center', marginTop: 8 },
+  emptyText: { fontSize: 18, fontWeight: '600', color: Colors.dark.text, marginTop: 20 },
+  emptySubText: { fontSize: 14, color: Colors.dark.textSecondary, textAlign: 'center', marginTop: 8 },
 
   fab: {
     position: 'absolute', bottom: 30, alignSelf: 'center',
-    backgroundColor: '#007AFF', borderRadius: 30,
+    backgroundColor: Colors.dark.primary, borderRadius: 30,
     flexDirection: 'row', alignItems: 'center',
     paddingVertical: 12, paddingHorizontal: 24,
-    elevation: 5, shadowColor: '#007AFF', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8
+    elevation: 5, shadowColor: Colors.dark.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8
   },
-  fabText: { color: '#fff', fontSize: 16, fontWeight: 'bold', marginLeft: 8 }
+  fabText: { color: Colors.dark.background, fontSize: 16, fontWeight: 'bold', marginLeft: 8 }
 });

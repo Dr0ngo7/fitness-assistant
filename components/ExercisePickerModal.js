@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import Body from "./BodyHighlighter"; // Assuming same folder structure for components
 import { collection, query, where, getDocs, limit } from "firebase/firestore";
 import { db } from "../firebase";
+import Colors from "../constants/Colors";
 
 /** --- Muscle Group Configuration (Copied for isolated modal logic) --- */
 const MUSCLE_TO_GROUP = {
@@ -128,6 +129,8 @@ export default function ExercisePickerModal({ visible, onClose, onSelect }) {
                     side={side}
                     scale={1.2}
                     gender="male"
+                    defaultFill={Colors.dark.surface}
+                    border={Colors.dark.border}
                 />
             </View>
             <Text style={styles.hint}>Listelemek istediğin kas grubuna dokun.</Text>
@@ -138,14 +141,14 @@ export default function ExercisePickerModal({ visible, onClose, onSelect }) {
         <View style={styles.stepContainer}>
             <View style={styles.headerRow}>
                 <TouchableOpacity onPress={() => setStep(1)} style={styles.backBtn}>
-                    <Ionicons name="arrow-back" size={24} color="#333" />
+                    <Ionicons name="arrow-back" size={24} color={Colors.dark.text} />
                 </TouchableOpacity>
                 <Text style={styles.title}>Egzersiz Seç</Text>
                 <View style={{ width: 24 }} />
             </View>
 
             {loading ? (
-                <ActivityIndicator size="large" color="#007AFF" style={{ marginTop: 50 }} />
+                <ActivityIndicator size="large" color={Colors.dark.primary} style={{ marginTop: 50 }} />
             ) : (
                 <FlatList
                     data={exercises}
@@ -167,7 +170,7 @@ export default function ExercisePickerModal({ visible, onClose, onSelect }) {
                             <Ionicons name="chevron-forward" size={20} color="#ccc" />
                         </TouchableOpacity>
                     )}
-                    ListEmptyComponent={<Text style={{ textAlign: 'center', marginTop: 20, color: '#666' }}>Bu grupta egzersiz bulunamadı.</Text>}
+                    ListEmptyComponent={<Text style={{ textAlign: 'center', marginTop: 20, color: Colors.dark.textSecondary }}>Bu grupta egzersiz bulunamadı.</Text>}
                 />
             )}
         </View>
@@ -177,7 +180,7 @@ export default function ExercisePickerModal({ visible, onClose, onSelect }) {
         <View style={styles.stepContainer}>
             <View style={styles.headerRow}>
                 <TouchableOpacity onPress={() => setStep(2)} style={styles.backBtn}>
-                    <Ionicons name="arrow-back" size={24} color="#333" />
+                    <Ionicons name="arrow-back" size={24} color={Colors.dark.text} />
                 </TouchableOpacity>
                 <Text style={styles.title}>Ayarlar</Text>
                 <View style={{ width: 24 }} />
@@ -219,7 +222,7 @@ export default function ExercisePickerModal({ visible, onClose, onSelect }) {
                 <View style={styles.modalHeader}>
                     <Text style={styles.headerTitle}>Egzersiz Ekle</Text>
                     <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-                        <Ionicons name="close" size={24} color="#333" />
+                        <Ionicons name="close" size={24} color={Colors.dark.text} />
                     </TouchableOpacity>
                 </View>
 
@@ -233,38 +236,38 @@ export default function ExercisePickerModal({ visible, onClose, onSelect }) {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: "#fff" },
-    modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: '#eee' },
-    headerTitle: { fontSize: 18, fontWeight: 'bold' },
+    container: { flex: 1, backgroundColor: Colors.dark.surface },
+    modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: Colors.dark.border },
+    headerTitle: { fontSize: 18, fontWeight: 'bold', color: Colors.dark.text },
     closeBtn: { padding: 4 },
 
     stepContainer: { flex: 1 },
-    title: { fontSize: 20, fontWeight: 'bold', textAlign: 'center', marginVertical: 10 },
+    title: { fontSize: 20, fontWeight: 'bold', textAlign: 'center', marginVertical: 10, color: Colors.dark.text },
 
     toggleRow: { flexDirection: 'row', justifyContent: 'center', gap: 10, marginBottom: 10 },
-    toggleBtn: { paddingHorizontal: 20, paddingVertical: 8, borderRadius: 20, backgroundColor: '#f0f0f0' },
-    toggleBtnActive: { backgroundColor: '#007AFF' },
-    toggleText: { fontWeight: '600', color: '#333' },
-    toggleTextActive: { color: '#fff' },
+    toggleBtn: { paddingHorizontal: 20, paddingVertical: 8, borderRadius: 20, backgroundColor: Colors.dark.background },
+    toggleBtnActive: { backgroundColor: Colors.dark.primary },
+    toggleText: { fontWeight: '600', color: Colors.dark.textSecondary },
+    toggleTextActive: { color: Colors.dark.background },
 
-    mapWrapper: { height: 450, alignItems: 'center', justifyContent: 'center', backgroundColor: '#f9f9f9', margin: 10, borderRadius: 16 },
-    hint: { textAlign: 'center', color: '#888', marginTop: 10 },
+    mapWrapper: { height: 450, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.dark.background, margin: 10, borderRadius: 16 },
+    hint: { textAlign: 'center', color: Colors.dark.textSecondary, marginTop: 10 },
 
     headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16 },
     backBtn: { padding: 4 },
 
-    listItem: { flexDirection: 'row', alignItems: 'center', padding: 12, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
-    listThumb: { width: 50, height: 50, borderRadius: 8, marginRight: 12, backgroundColor: '#eee' },
+    listItem: { flexDirection: 'row', alignItems: 'center', padding: 12, borderBottomWidth: 1, borderBottomColor: Colors.dark.border },
+    listThumb: { width: 50, height: 50, borderRadius: 8, marginRight: 12, backgroundColor: Colors.dark.background },
     placeholderThumb: { justifyContent: 'center', alignItems: 'center' },
-    listName: { fontSize: 16, fontWeight: '600', color: '#333' },
-    listSub: { fontSize: 14, color: '#888' },
+    listName: { fontSize: 16, fontWeight: '600', color: Colors.dark.text },
+    listSub: { fontSize: 14, color: Colors.dark.textSecondary },
 
     configContent: { padding: 20 },
-    exerciseTitle: { fontSize: 22, fontWeight: 'bold', color: '#007AFF', marginBottom: 20, textAlign: 'center' },
+    exerciseTitle: { fontSize: 22, fontWeight: 'bold', color: Colors.dark.primary, marginBottom: 20, textAlign: 'center' },
     inputGroup: { marginBottom: 16 },
-    label: { fontSize: 14, fontWeight: '600', color: '#666', marginBottom: 6 },
-    input: { borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 12, fontSize: 16, backgroundColor: '#fdfdfd' },
+    label: { fontSize: 14, fontWeight: '600', color: Colors.dark.textSecondary, marginBottom: 6 },
+    input: { borderWidth: 1, borderColor: Colors.dark.border, borderRadius: 8, padding: 12, fontSize: 16, backgroundColor: Colors.dark.background, color: Colors.dark.text },
 
-    addBtn: { backgroundColor: '#34C759', padding: 16, borderRadius: 12, alignItems: 'center', marginTop: 20 },
-    addBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 16 }
+    addBtn: { backgroundColor: Colors.dark.primary, padding: 16, borderRadius: 12, alignItems: 'center', marginTop: 20 },
+    addBtnText: { color: Colors.dark.background, fontWeight: 'bold', fontSize: 16 }
 });

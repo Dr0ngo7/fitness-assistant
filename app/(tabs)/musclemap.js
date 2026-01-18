@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Body from "../../components/BodyHighlighter";
+import Colors from '../../constants/Colors';
 
 /** --- Muscle Grouping Configuration --- */
 
@@ -105,12 +106,12 @@ export default function MuscleMap() {
     return musclesInGroup.map((muscleSlug) => ({
       slug: muscleSlug,
       intensity: 2,
-      color: "#0ea5e9", // Highlight color (Blue)
+      color: Colors.dark.primary, // Highlight color (Neon Lime)
     }));
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#eef2f7" }} edges={["top"]}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.dark.background }} edges={["top"]}>
       <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
         {/* Başlık */}
         <View style={{ padding: 16, paddingBottom: 8 }}>
@@ -121,17 +122,19 @@ export default function MuscleMap() {
               justifyContent: "space-between",
             }}
           >
-            <Text style={{ fontSize: 20, fontWeight: "700" }}>Kas Haritası</Text>
+            <Text style={{ fontSize: 20, fontWeight: "700", color: Colors.dark.text }}>Kas Haritası</Text>
             <TouchableOpacity
               onPress={() => router.push("/exercises/all")}
               style={{
                 paddingVertical: 8,
                 paddingHorizontal: 12,
-                backgroundColor: "#0ea5e9",
+                backgroundColor: Colors.dark.surface,
                 borderRadius: 10,
+                borderWidth: 1,
+                borderColor: Colors.dark.border
               }}
             >
-              <Text style={{ color: "#fff", fontWeight: "800" }}>
+              <Text style={{ color: Colors.dark.primary, fontWeight: "800" }}>
                 Tüm Hareketler
               </Text>
             </TouchableOpacity>
@@ -147,12 +150,14 @@ export default function MuscleMap() {
                   paddingVertical: 8,
                   paddingHorizontal: 12,
                   borderRadius: 20,
-                  backgroundColor: side === s ? "#0ea5e9" : "#eef2ff",
+                  backgroundColor: side === s ? Colors.dark.primary : Colors.dark.surface,
+                  borderWidth: 1,
+                  borderColor: side === s ? Colors.dark.primary : Colors.dark.border,
                 }}
               >
                 <Text
                   style={{
-                    color: side === s ? "#fff" : "#0f172a",
+                    color: side === s ? Colors.dark.background : Colors.dark.textSecondary,
                     fontWeight: "700",
                   }}
                 >
@@ -169,11 +174,13 @@ export default function MuscleMap() {
             marginHorizontal: 12,
             borderRadius: 16,
             overflow: "hidden",
-            backgroundColor: "#fff",
+            backgroundColor: Colors.dark.surface, // Koyu zemin
             alignItems: "center",
             paddingVertical: 20,
             minHeight: 450,
-            justifyContent: "center"
+            justifyContent: "center",
+            borderWidth: 1,
+            borderColor: Colors.dark.border
           }}
         >
           <Body
@@ -193,6 +200,7 @@ export default function MuscleMap() {
             paddingTop: 12,
             marginTop: 12,
             textAlign: "center",
+            color: Colors.dark.textSecondary
           }}
         >
           {side === "front"

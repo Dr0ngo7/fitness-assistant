@@ -4,6 +4,7 @@ import {
     Image, StyleSheet, SafeAreaView, Dimensions
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import Colors from '../constants/Colors';
 
 export default function ExerciseSelectionModal({ visible, candidates, onSelect, onClose }) {
     return (
@@ -14,7 +15,7 @@ export default function ExerciseSelectionModal({ visible, candidates, onSelect, 
                     <View style={styles.header}>
                         <Text style={styles.title}>Bunu mu demek istediniz?</Text>
                         <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-                            <Ionicons name="close" size={24} color="#333" />
+                            <Ionicons name="close" size={24} color={Colors.dark.text} />
                         </TouchableOpacity>
                     </View>
 
@@ -53,25 +54,25 @@ export default function ExerciseSelectionModal({ visible, candidates, onSelect, 
 const styles = StyleSheet.create({
     modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
     modalContent: {
-        backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20,
+        backgroundColor: Colors.dark.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20,
         padding: 20, height: '70%', paddingBottom: 40
     },
 
     header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
-    title: { fontSize: 18, fontWeight: 'bold', color: '#333' },
+    title: { fontSize: 18, fontWeight: 'bold', color: Colors.dark.text },
     closeBtn: { padding: 4 },
 
-    subtitle: { color: '#666', marginBottom: 15, fontSize: 14 },
+    subtitle: { color: Colors.dark.textSecondary, marginBottom: 15, fontSize: 14 },
 
     listContent: { gap: 10 },
     item: {
         flexDirection: 'row', alignItems: 'center', padding: 10,
-        borderWidth: 1, borderColor: '#eee', borderRadius: 12, backgroundColor: '#f9f9f9'
+        borderWidth: 1, borderColor: Colors.dark.border, borderRadius: 12, backgroundColor: Colors.dark.background
     },
-    thumb: { width: 50, height: 50, borderRadius: 8, marginRight: 12, backgroundColor: '#eee' },
+    thumb: { width: 50, height: 50, borderRadius: 8, marginRight: 12, backgroundColor: Colors.dark.surface },
     placeholderThumb: { justifyContent: 'center', alignItems: 'center' },
 
     info: { flex: 1 },
-    name: { fontSize: 16, fontWeight: '600', color: '#333' },
-    group: { fontSize: 12, color: '#888', marginTop: 2 }
+    name: { fontSize: 16, fontWeight: '600', color: Colors.dark.text },
+    group: { fontSize: 12, color: Colors.dark.textSecondary, marginTop: 2 }
 });

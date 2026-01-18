@@ -11,6 +11,7 @@ import PlanChatModal from '../../components/PlanChatModal';
 import { findExerciseByName } from '../../services/exerciseService';
 import ExerciseSelectionModal from '../../components/ExerciseSelectionModal';
 import ExercisePickerModal from '../../components/ExercisePickerModal';
+import Colors from '../../constants/Colors';
 
 export default function PlanDetailScreen() {
     const { id } = useLocalSearchParams();
@@ -182,7 +183,7 @@ export default function PlanDetailScreen() {
     if (loading) {
         return (
             <View style={styles.center}>
-                <ActivityIndicator size="large" color="#007AFF" />
+                <ActivityIndicator size="large" color={Colors.dark.primary} />
             </View>
         );
     }
@@ -193,7 +194,7 @@ export default function PlanDetailScreen() {
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-                    <Ionicons name="arrow-back" size={24} color="#333" />
+                    <Ionicons name="arrow-back" size={24} color={Colors.dark.text} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle} numberOfLines={1}>{plan.title}</Text>
 
@@ -203,14 +204,14 @@ export default function PlanDetailScreen() {
                         onPress={() => setIsEditing(!isEditing)}
                         style={[styles.actionBtn, isEditing && styles.actionBtnActive]}
                     >
-                        <Ionicons name={isEditing ? "checkmark" : "pencil"} size={22} color={isEditing ? "#fff" : "#007AFF"} />
+                        <Ionicons name={isEditing ? "checkmark" : "pencil"} size={22} color={isEditing ? Colors.dark.background : Colors.dark.primary} />
                     </TouchableOpacity>
 
                     <TouchableOpacity onPress={() => setIsChatVisible(true)} style={styles.actionBtn}>
-                        <Ionicons name="chatbubbles" size={22} color="#007AFF" />
+                        <Ionicons name="chatbubbles" size={22} color={Colors.dark.primary} />
                     </TouchableOpacity>
                     <TouchableOpacity onPress={handleDelete} style={styles.actionBtn}>
-                        <Ionicons name="trash-outline" size={22} color="#ff3b30" />
+                        <Ionicons name="trash-outline" size={22} color={Colors.dark.error} />
                     </TouchableOpacity>
                 </View>
             </View>
@@ -232,29 +233,29 @@ export default function PlanDetailScreen() {
                 </ScrollView>
 
                 {/* Day Details */}
-                <View style={[styles.dayCard, isEditing && { borderColor: '#007AFF', borderWidth: 2 }]}>
+                <View style={[styles.dayCard, isEditing && { borderColor: Colors.dark.primary, borderWidth: 2 }]}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Text style={styles.dayTitle}>{selectedDay.day_tr}</Text>
-                        {isEditing && <Text style={{ color: '#007AFF', fontWeight: 'bold' }}>DÜZENLEME MODU</Text>}
+                        {isEditing && <Text style={{ color: Colors.dark.primary, fontWeight: 'bold' }}>DÜZENLEME MODU</Text>}
                     </View>
                     <Text style={styles.dayFocus}>Odak: {selectedDay.focus}</Text>
 
                     {selectedDay.exercises.length === 0 ? (
-                        <Text style={{ fontStyle: 'italic', marginTop: 10, color: '#666' }}>Bugün dinlenme günü.</Text>
+                        <Text style={{ fontStyle: 'italic', marginTop: 10, color: Colors.dark.textSecondary }}>Bugün dinlenme günü.</Text>
                     ) : (
                         selectedDay.exercises.map((ex, idx) => (
                             <View key={idx} style={styles.exerciseRowWrapper}>
                                 {isEditing && (
                                     <View style={styles.editControls}>
                                         <TouchableOpacity onPress={() => removeExerciseFromDay(idx)} style={styles.controlBtn}>
-                                            <Ionicons name="remove-circle" size={24} color="#ff3b30" />
+                                            <Ionicons name="remove-circle" size={24} color={Colors.dark.error} />
                                         </TouchableOpacity>
                                         <View>
                                             <TouchableOpacity onPress={() => moveExercise(idx, 'up')} style={styles.smallControl}>
-                                                <Ionicons name="caret-up" size={16} color="#666" />
+                                                <Ionicons name="caret-up" size={16} color={Colors.dark.textSecondary} />
                                             </TouchableOpacity>
                                             <TouchableOpacity onPress={() => moveExercise(idx, 'down')} style={styles.smallControl}>
-                                                <Ionicons name="caret-down" size={16} color="#666" />
+                                                <Ionicons name="caret-down" size={16} color={Colors.dark.textSecondary} />
                                             </TouchableOpacity>
                                         </View>
                                     </View>
@@ -282,7 +283,7 @@ export default function PlanDetailScreen() {
 
                     {isEditing && (
                         <TouchableOpacity style={styles.addExerciseBtn} onPress={() => setPickerVisible(true)}>
-                            <Ionicons name="add-circle" size={24} color="#34C759" />
+                            <Ionicons name="add-circle" size={24} color={Colors.dark.primary} />
                             <Text style={styles.addExerciseText}>Egzersiz Ekle</Text>
                         </TouchableOpacity>
                     )}
@@ -315,47 +316,47 @@ export default function PlanDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#f8f9fa' },
+    container: { flex: 1, backgroundColor: Colors.dark.background },
     center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 
     header: {
         flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-        padding: 16, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#eee'
+        padding: 16, backgroundColor: Colors.dark.surface, borderBottomWidth: 1, borderBottomColor: Colors.dark.border
     },
-    headerTitle: { fontSize: 18, fontWeight: '700', flex: 1, textAlign: 'center', marginHorizontal: 10 },
+    headerTitle: { fontSize: 18, fontWeight: '700', flex: 1, textAlign: 'center', marginHorizontal: 10, color: Colors.dark.text },
     backBtn: { padding: 8 },
     actionBtn: { padding: 8, marginLeft: 2 },
-    actionBtnActive: { backgroundColor: '#007AFF', borderRadius: 20 },
+    actionBtnActive: { backgroundColor: Colors.dark.primary, borderRadius: 20 },
 
     scrollContent: { padding: 20 },
 
     dayScroll: { marginBottom: 20, flexDirection: 'row' },
-    dayButton: { paddingVertical: 10, paddingHorizontal: 16, backgroundColor: '#fff', borderRadius: 20, marginRight: 10, borderWidth: 1, borderColor: '#eee' },
-    dayButtonActive: { backgroundColor: '#333', borderColor: '#333' },
-    dayText: { fontWeight: '600', color: '#666' },
-    dayTextActive: { color: '#fff' },
+    dayButton: { paddingVertical: 10, paddingHorizontal: 16, backgroundColor: Colors.dark.surface, borderRadius: 20, marginRight: 10, borderWidth: 1, borderColor: Colors.dark.border },
+    dayButtonActive: { backgroundColor: Colors.dark.primary, borderColor: Colors.dark.primary },
+    dayText: { fontWeight: '600', color: Colors.dark.textSecondary },
+    dayTextActive: { color: Colors.dark.background },
 
-    dayCard: { backgroundColor: '#fff', padding: 20, borderRadius: 16, elevation: 1 },
-    dayTitle: { fontSize: 22, fontWeight: 'bold', marginBottom: 5 },
-    dayFocus: { fontSize: 16, color: '#007AFF', fontWeight: '600', marginBottom: 15 },
+    dayCard: { backgroundColor: Colors.dark.surface, padding: 20, borderRadius: 16, borderWidth: 1, borderColor: Colors.dark.border },
+    dayTitle: { fontSize: 22, fontWeight: 'bold', marginBottom: 5, color: Colors.dark.text },
+    dayFocus: { fontSize: 16, color: Colors.dark.primary, fontWeight: '600', marginBottom: 15 },
 
     exerciseRowWrapper: {
         flexDirection: 'row',
         alignItems: 'center',
         borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
+        borderBottomColor: Colors.dark.border,
         paddingVertical: 12
     },
-    exerciseItem: { flex: 1 }, // takes full width if no edit controls
-    exName: { fontSize: 17, fontWeight: '700', color: '#222' },
+    exerciseItem: { flex: 1 },
+    exName: { fontSize: 17, fontWeight: '700', color: Colors.dark.text },
     exDetails: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 },
-    exMeta: { color: '#555', fontSize: 14, fontWeight: '500' },
-    exNotes: { marginTop: 4, color: '#888', fontStyle: 'italic', fontSize: 13 },
+    exMeta: { color: Colors.dark.textSecondary, fontSize: 14, fontWeight: '500' },
+    exNotes: { marginTop: 4, color: Colors.dark.textSecondary, fontStyle: 'italic', fontSize: 13, opacity: 0.8 },
 
     editControls: { marginRight: 10, flexDirection: 'row', alignItems: 'center' },
     controlBtn: { marginRight: 8 },
     smallControl: { padding: 2 },
 
-    addExerciseBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 15, marginTop: 10, borderStyle: 'dashed', borderWidth: 1, borderColor: '#ddd', borderRadius: 12 },
-    addExerciseText: { fontWeight: 'bold', color: '#333', marginLeft: 8 }
+    addExerciseBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 15, marginTop: 10, borderStyle: 'dashed', borderWidth: 1, borderColor: Colors.dark.border, borderRadius: 12, backgroundColor: Colors.dark.background },
+    addExerciseText: { fontWeight: 'bold', color: Colors.dark.textSecondary, marginLeft: 8 }
 });

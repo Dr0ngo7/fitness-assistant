@@ -11,6 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import PlanChatModal from '../../components/PlanChatModal';
 import { findExerciseByName } from '../../services/exerciseService';
 import ExerciseSelectionModal from '../../components/ExerciseSelectionModal';
+import Colors from '../../constants/Colors';
 
 const GOALS = [
     "Kilo Vermek",
@@ -194,7 +195,7 @@ export default function NewPlanScreen() {
             <Text style={styles.label}>{label}</Text>
             <TouchableOpacity style={styles.selectBtn} onPress={onPress}>
                 <Text style={styles.selectBtnText}>{value}</Text>
-                <Ionicons name="chevron-down" size={20} color="#666" />
+                <Ionicons name="chevron-down" size={20} color={Colors.dark.textSecondary} />
             </TouchableOpacity>
         </View>
     );
@@ -233,8 +234,8 @@ export default function NewPlanScreen() {
                 {/* Loading State */}
                 {loading && (
                     <View style={styles.center}>
-                        <ActivityIndicator size="large" color="#007AFF" />
-                        <Text style={{ marginTop: 10 }}>Programın Hazırlanıyor...</Text>
+                        <ActivityIndicator size="large" color={Colors.dark.primary} />
+                        <Text style={{ marginTop: 10, color: Colors.dark.text }}>Programın Hazırlanıyor...</Text>
                     </View>
                 )}
 
@@ -248,10 +249,10 @@ export default function NewPlanScreen() {
                                     <Ionicons name="chatbubbles" size={20} color="#fff" />
                                 </TouchableOpacity>
                                 <TouchableOpacity onPress={() => setWeeklyPlan(null)} style={styles.secondaryBtn}>
-                                    <Text style={{ color: '#666' }}>Düzenle</Text>
+                                    <Text style={{ color: Colors.dark.textSecondary }}>Düzenle</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity onPress={savePlan} style={styles.primaryBtn}>
-                                    <Text style={{ color: '#fff', fontWeight: 'bold' }}>Kaydet</Text>
+                                    <Text style={{ color: Colors.dark.background, fontWeight: 'bold' }}>Kaydet</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -263,7 +264,7 @@ export default function NewPlanScreen() {
                             <Text style={styles.dayFocus}>Odak: {selectedDay.focus}</Text>
 
                             {selectedDay.exercises.length === 0 ? (
-                                <Text style={{ fontStyle: 'italic', marginTop: 10, color: '#666' }}>Bugün dinlenme günü.</Text>
+                                <Text style={{ fontStyle: 'italic', marginTop: 10, color: Colors.dark.textSecondary }}>Bugün dinlenme günü.</Text>
                             ) : (
                                 selectedDay.exercises.map((ex, idx) => (
                                     <TouchableOpacity
@@ -285,7 +286,7 @@ export default function NewPlanScreen() {
                             )}
                         </View>
 
-                        <TouchableOpacity onPress={savePlan} style={[styles.generateButton, { marginTop: 20, backgroundColor: '#34C759' }]}>
+                        <TouchableOpacity onPress={savePlan} style={[styles.generateButton, { marginTop: 20, backgroundColor: Colors.dark.primary }]}>
                             <Text style={styles.generateButtonText}>Programı Kütüphaneme Ekle</Text>
                         </TouchableOpacity>
                     </View>
@@ -300,7 +301,7 @@ export default function NewPlanScreen() {
                         <View style={styles.modalHeader}>
                             <Text style={styles.modalTitle}>{modalTitle}</Text>
                             <TouchableOpacity onPress={() => setModalVisible(false)}>
-                                <Ionicons name="close" size={24} color="#333" />
+                                <Ionicons name="close" size={24} color={Colors.dark.text} />
                             </TouchableOpacity>
                         </View>
                         <FlatList
@@ -343,51 +344,51 @@ export default function NewPlanScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#f8f9fa' },
+    container: { flex: 1, backgroundColor: Colors.dark.background },
     scrollContent: { padding: 20 },
     center: { flex: 1, justifyContent: 'center', alignItems: 'center', minHeight: 400 },
 
-    formContainer: { backgroundColor: '#fff', padding: 20, borderRadius: 16, elevation: 2 },
-    header: { fontSize: 22, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
+    formContainer: { backgroundColor: Colors.dark.surface, padding: 20, borderRadius: 16, borderWidth: 1, borderColor: Colors.dark.border },
+    header: { fontSize: 22, fontWeight: 'bold', marginBottom: 20, textAlign: 'center', color: Colors.dark.text },
 
     inputGroup: { marginBottom: 16 },
-    label: { fontSize: 15, fontWeight: '600', marginBottom: 8, color: '#333' },
+    label: { fontSize: 15, fontWeight: '600', marginBottom: 8, color: Colors.dark.textSecondary },
     selectBtn: {
         flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-        borderWidth: 1, borderColor: '#ddd', borderRadius: 12, padding: 16,
-        backgroundColor: '#fdfdfd'
+        borderWidth: 1, borderColor: Colors.dark.border, borderRadius: 12, padding: 16,
+        backgroundColor: Colors.dark.background
     },
-    selectBtnText: { fontSize: 16, color: '#333' },
+    selectBtnText: { fontSize: 16, color: Colors.dark.text },
 
-    generateButton: { backgroundColor: '#007AFF', padding: 16, borderRadius: 12, marginTop: 10, alignItems: 'center' },
-    generateButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+    generateButton: { backgroundColor: Colors.dark.primary, padding: 16, borderRadius: 12, marginTop: 10, alignItems: 'center' },
+    generateButtonText: { color: Colors.dark.background, fontSize: 16, fontWeight: 'bold' },
 
     planHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 },
-    planTitle: { fontSize: 24, fontWeight: 'bold', color: '#333' },
+    planTitle: { fontSize: 24, fontWeight: 'bold', color: Colors.dark.text },
 
     secondaryBtn: { padding: 8 },
-    primaryBtn: { backgroundColor: '#007AFF', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 },
+    primaryBtn: { backgroundColor: Colors.dark.primary, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 },
 
     dayScroll: { marginBottom: 20, flexDirection: 'row' },
-    dayButton: { paddingVertical: 10, paddingHorizontal: 16, backgroundColor: '#fff', borderRadius: 20, marginRight: 10, borderWidth: 1, borderColor: '#eee' },
-    dayButtonActive: { backgroundColor: '#333', borderColor: '#333' },
-    dayText: { fontWeight: '600', color: '#666' },
-    dayTextActive: { color: '#fff' },
+    dayButton: { paddingVertical: 10, paddingHorizontal: 16, backgroundColor: Colors.dark.surface, borderRadius: 20, marginRight: 10, borderWidth: 1, borderColor: Colors.dark.border },
+    dayButtonActive: { backgroundColor: Colors.dark.primary, borderColor: Colors.dark.primary },
+    dayText: { fontWeight: '600', color: Colors.dark.textSecondary },
+    dayTextActive: { color: Colors.dark.background },
 
-    dayCard: { backgroundColor: '#fff', padding: 20, borderRadius: 16, elevation: 1 },
-    dayTitle: { fontSize: 22, fontWeight: 'bold', marginBottom: 5 },
-    dayFocus: { fontSize: 16, color: '#007AFF', fontWeight: '600', marginBottom: 15 },
+    dayCard: { backgroundColor: Colors.dark.surface, padding: 20, borderRadius: 16, borderWidth: 1, borderColor: Colors.dark.border },
+    dayTitle: { fontSize: 22, fontWeight: 'bold', marginBottom: 5, color: Colors.dark.text },
+    dayFocus: { fontSize: 16, color: Colors.dark.primary, fontWeight: '600', marginBottom: 15 },
 
-    exerciseItem: { paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
-    exName: { fontSize: 16, fontWeight: '700', color: '#222' },
+    exerciseItem: { paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: Colors.dark.border },
+    exName: { fontSize: 16, fontWeight: '700', color: Colors.dark.text },
     exDetails: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 },
-    exMeta: { color: '#555', fontSize: 13, fontWeight: '500' },
-    exNotes: { marginTop: 4, color: '#888', fontStyle: 'italic', fontSize: 13 },
+    exMeta: { color: Colors.dark.textSecondary, fontSize: 13, fontWeight: '500' },
+    exNotes: { marginTop: 4, color: Colors.dark.textSecondary, fontStyle: 'italic', fontSize: 13, opacity: 0.8 },
 
     modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-    modalContent: { backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, maxHeight: '50%' },
+    modalContent: { backgroundColor: Colors.dark.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, maxHeight: '50%' },
     modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-    modalTitle: { fontSize: 18, fontWeight: 'bold' },
-    modalItem: { paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#eee' },
-    modalItemText: { fontSize: 16, color: '#333' }
+    modalTitle: { fontSize: 18, fontWeight: 'bold', color: Colors.dark.text },
+    modalItem: { paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: Colors.dark.border },
+    modalItemText: { fontSize: 16, color: Colors.dark.text }
 });

@@ -3,6 +3,7 @@ import { Modal, View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Fla
 import { Ionicons } from "@expo/vector-icons";
 import { collection, query, getDocs, doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "../firebase";
+import Colors from "../constants/Colors";
 
 export default function AddToPlanModal({ visible, onClose, exerciseData }) {
     const [plans, setPlans] = useState([]);
@@ -120,7 +121,7 @@ export default function AddToPlanModal({ visible, onClose, exerciseData }) {
     const renderDayList = () => (
         <View style={styles.stepContainer}>
             <View style={styles.headerRow}>
-                <TouchableOpacity onPress={() => setStep(1)}><Ionicons name="arrow-back" size={24} color="#333" /></TouchableOpacity>
+                <TouchableOpacity onPress={() => setStep(1)}><Ionicons name="arrow-back" size={24} color={Colors.dark.text} /></TouchableOpacity>
                 <Text style={styles.title}>Hangi Güne?</Text>
                 <View style={{ width: 24 }} />
             </View>
@@ -141,7 +142,7 @@ export default function AddToPlanModal({ visible, onClose, exerciseData }) {
     const renderConfig = () => (
         <View style={styles.stepContainer}>
             <View style={styles.headerRow}>
-                <TouchableOpacity onPress={() => setStep(2)}><Ionicons name="arrow-back" size={24} color="#333" /></TouchableOpacity>
+                <TouchableOpacity onPress={() => setStep(2)}><Ionicons name="arrow-back" size={24} color={Colors.dark.text} /></TouchableOpacity>
                 <Text style={styles.title}>Ayarlar</Text>
                 <View style={{ width: 24 }} />
             </View>
@@ -174,7 +175,7 @@ export default function AddToPlanModal({ visible, onClose, exerciseData }) {
             <SafeAreaView style={styles.container}>
                 <View style={styles.modalHeader}>
                     <Text style={styles.headerTitle}>Programa Ekle</Text>
-                    <TouchableOpacity onPress={onClose}><Ionicons name="close" size={24} color="#333" /></TouchableOpacity>
+                    <TouchableOpacity onPress={onClose}><Ionicons name="close" size={24} color={Colors.dark.text} /></TouchableOpacity>
                 </View>
                 {step === 1 && renderPlanList()}
                 {step === 2 && renderDayList()}
@@ -185,25 +186,25 @@ export default function AddToPlanModal({ visible, onClose, exerciseData }) {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: "#fff" },
-    modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: '#eee' },
-    headerTitle: { fontSize: 18, fontWeight: 'bold' },
+    container: { flex: 1, backgroundColor: Colors.dark.surface },
+    modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: Colors.dark.border },
+    headerTitle: { fontSize: 18, fontWeight: 'bold', color: Colors.dark.text },
 
     stepContainer: { flex: 1, padding: 16 },
-    title: { fontSize: 20, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 },
+    title: { fontSize: 20, fontWeight: 'bold', textAlign: 'center', marginBottom: 20, color: Colors.dark.text },
     headerRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 },
 
-    listItem: { flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
-    iconBox: { width: 40, height: 40, borderRadius: 8, backgroundColor: '#eef2ff', alignItems: 'center', justifyContent: 'center', marginRight: 15 },
-    listTitle: { fontSize: 16, fontWeight: '600', color: '#333' },
-    listSub: { fontSize: 14, color: '#888' },
+    listItem: { flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: Colors.dark.border },
+    iconBox: { width: 40, height: 40, borderRadius: 8, backgroundColor: Colors.dark.background, alignItems: 'center', justifyContent: 'center', marginRight: 15 },
+    listTitle: { fontSize: 16, fontWeight: '600', color: Colors.dark.text },
+    listSub: { fontSize: 14, color: Colors.dark.textSecondary },
 
     configContent: { marginTop: 10 },
-    planTarget: { textAlign: 'center', color: '#007AFF', fontWeight: '600', marginBottom: 20 },
+    planTarget: { textAlign: 'center', color: Colors.dark.primary, fontWeight: '600', marginBottom: 20 },
     inputGroup: { marginBottom: 16 },
-    label: { fontSize: 14, fontWeight: '600', color: '#666', marginBottom: 6 },
-    input: { borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 12, fontSize: 16, backgroundColor: '#fdfdfd' },
+    label: { fontSize: 14, fontWeight: '600', color: Colors.dark.textSecondary, marginBottom: 6 },
+    input: { borderWidth: 1, borderColor: Colors.dark.border, borderRadius: 8, padding: 12, fontSize: 16, backgroundColor: Colors.dark.background, color: Colors.dark.text },
 
-    saveBtn: { backgroundColor: '#007AFF', padding: 16, borderRadius: 12, alignItems: 'center', marginTop: 20 },
-    saveBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 16 }
+    saveBtn: { backgroundColor: Colors.dark.primary, padding: 16, borderRadius: 12, alignItems: 'center', marginTop: 20 },
+    saveBtnText: { color: Colors.dark.background, fontWeight: 'bold', fontSize: 16 }
 });

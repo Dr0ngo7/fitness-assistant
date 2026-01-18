@@ -20,7 +20,15 @@ export default function TabsLayout() {
   if (!user) return <Redirect href="/auth/login" />;
 
   return (
-    <Tabs screenOptions={{ headerShown: false, tabBarActiveTintColor: '#0ea5e9' }}>
+    <Tabs screenOptions={{
+      headerShown: false,
+      tabBarActiveTintColor: '#D4FF00',
+      tabBarInactiveTintColor: '#666',
+      tabBarStyle: {
+        backgroundColor: '#1E1E1E',
+        borderTopColor: '#333',
+      }
+    }}>
       <Tabs.Screen
         name="musclemap"
         options={{

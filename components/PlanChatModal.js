@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { askGemini } from '../services/gemini';
+import Colors from '../constants/Colors';
 
 export default function PlanChatModal({ visible, onClose, planData, userGoal, onUpdatePlan }) {
     const [messages, setMessages] = useState([]);
@@ -94,7 +95,7 @@ export default function PlanChatModal({ visible, onClose, planData, userGoal, on
                     <View style={styles.header}>
                         <Text style={styles.headerTitle}>AI Antrenör</Text>
                         <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-                            <Ionicons name="close" size={24} color="#333" />
+                            <Ionicons name="close" size={24} color={Colors.dark.text} />
                         </TouchableOpacity>
                     </View>
 
@@ -106,7 +107,7 @@ export default function PlanChatModal({ visible, onClose, planData, userGoal, on
                     >
                         {messages.length === 0 && (
                             <View style={styles.welcomeContainer}>
-                                <Ionicons name="chatbubbles-outline" size={48} color="#ccc" />
+                                <Ionicons name="chatbubbles-outline" size={48} color={Colors.dark.textSecondary} />
                                 <Text style={styles.welcomeText}>
                                     Bu program hakkında merak ettiğin her şeyi sorabilirsin.
                                     {"\n\n"}Örn: "Neden 3 set yapıyoruz?", "Bu hareket nereyi çalıştırır?"
@@ -145,7 +146,7 @@ export default function PlanChatModal({ visible, onClose, planData, userGoal, on
                             value={input}
                             onChangeText={setInput}
                             placeholder="Bir soru sor..."
-                            placeholderTextColor="#999"
+                            placeholderTextColor={Colors.dark.textSecondary}
                             returnKeyType="send"
                             onSubmitEditing={sendMessage}
                         />
@@ -154,7 +155,7 @@ export default function PlanChatModal({ visible, onClose, planData, userGoal, on
                             onPress={sendMessage}
                             disabled={!input.trim() || loading}
                         >
-                            <Ionicons name="send" size={20} color="#fff" />
+                            <Ionicons name="send" size={20} color={Colors.dark.background} />
                         </TouchableOpacity>
                     </View>
 
@@ -165,39 +166,39 @@ export default function PlanChatModal({ visible, onClose, planData, userGoal, on
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#f9f9f9' },
+    container: { flex: 1, backgroundColor: Colors.dark.background },
     header: {
         flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-        padding: 16, borderBottomWidth: 1, borderBottomColor: '#eee', backgroundColor: '#fff'
+        padding: 16, borderBottomWidth: 1, borderBottomColor: Colors.dark.border, backgroundColor: Colors.dark.surface
     },
-    headerTitle: { fontSize: 18, fontWeight: '700', color: '#333' },
+    headerTitle: { fontSize: 18, fontWeight: '700', color: Colors.dark.text },
     closeBtn: { padding: 4 },
 
     chatContainer: { flex: 1, padding: 16 },
 
     welcomeContainer: { alignItems: 'center', marginTop: 50, paddingHorizontal: 40 },
-    welcomeText: { textAlign: 'center', color: '#888', marginTop: 10, lineHeight: 22 },
+    welcomeText: { textAlign: 'center', color: Colors.dark.textSecondary, marginTop: 10, lineHeight: 22 },
 
     messageBubble: { maxWidth: '80%', padding: 12, borderRadius: 16, marginBottom: 12 },
-    userBubble: { alignSelf: 'flex-end', backgroundColor: '#007AFF', borderBottomRightRadius: 4 },
-    aiBubble: { alignSelf: 'flex-start', backgroundColor: '#fff', borderBottomLeftRadius: 4, borderWidth: 1, borderColor: '#eee' },
-    loadingBubble: { alignSelf: 'flex-start', padding: 12, backgroundColor: '#f0f0f0', borderRadius: 16 },
+    userBubble: { alignSelf: 'flex-end', backgroundColor: Colors.dark.primary, borderBottomRightRadius: 4 },
+    aiBubble: { alignSelf: 'flex-start', backgroundColor: Colors.dark.surface, borderBottomLeftRadius: 4, borderWidth: 1, borderColor: Colors.dark.border },
+    loadingBubble: { alignSelf: 'flex-start', padding: 12, backgroundColor: Colors.dark.surface, borderRadius: 16 },
 
     messageText: { fontSize: 16, lineHeight: 22 },
-    userText: { color: '#fff' },
-    aiText: { color: '#333' },
+    userText: { color: Colors.dark.background, fontWeight: '600' }, // High contrast with Neon
+    aiText: { color: Colors.dark.text },
 
     inputContainer: {
-        flexDirection: 'row', padding: 12, backgroundColor: '#fff',
-        borderTopWidth: 1, borderTopColor: '#eee', alignItems: 'center'
+        flexDirection: 'row', padding: 12, backgroundColor: Colors.dark.surface,
+        borderTopWidth: 1, borderTopColor: Colors.dark.border, alignItems: 'center'
     },
     input: {
-        flex: 1, backgroundColor: '#f5f5f5', borderRadius: 20,
-        paddingHorizontal: 16, paddingVertical: 10, fontSize: 16, maxHeight: 100
+        flex: 1, backgroundColor: Colors.dark.background, borderRadius: 20,
+        paddingHorizontal: 16, paddingVertical: 10, fontSize: 16, maxHeight: 100, color: Colors.dark.text
     },
     sendBtn: {
         marginLeft: 10, width: 40, height: 40, borderRadius: 20,
-        backgroundColor: '#007AFF', justifyContent: 'center', alignItems: 'center'
+        backgroundColor: Colors.dark.primary, justifyContent: 'center', alignItems: 'center'
     },
-    sendBtnDisabled: { backgroundColor: '#ccc' }
+    sendBtnDisabled: { backgroundColor: Colors.dark.textSecondary }
 });

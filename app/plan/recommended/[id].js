@@ -5,6 +5,7 @@ import { doc, getDoc, collection, addDoc, serverTimestamp } from 'firebase/fires
 import { db, auth } from '../../../firebase';
 import { Ionicons } from '@expo/vector-icons';
 import Markdown from 'react-native-markdown-display';
+import Colors from '../../../constants/Colors';
 
 const { width } = Dimensions.get('window');
 
@@ -73,7 +74,7 @@ export default function RecommendedPlanDetail() {
     if (loading) {
         return (
             <View style={styles.center}>
-                <ActivityIndicator size="large" color="#007AFF" />
+                <ActivityIndicator size="large" color={Colors.dark.primary} />
             </View>
         );
     }
@@ -114,15 +115,15 @@ export default function RecommendedPlanDetail() {
                     {/* Meta Info */}
                     <View style={styles.metaContainer}>
                         <View style={styles.metaItem}>
-                            <Ionicons name="time-outline" size={20} color="#666" />
+                            <Ionicons name="time-outline" size={20} color={Colors.dark.textSecondary} />
                             <Text style={styles.metaText}>{plan.duration}</Text>
                         </View>
                         <View style={styles.metaItem}>
-                            <Ionicons name="barbell-outline" size={20} color="#666" />
+                            <Ionicons name="barbell-outline" size={20} color={Colors.dark.textSecondary} />
                             <Text style={styles.metaText}>{plan.difficulty}</Text>
                         </View>
                         <View style={styles.metaItem}>
-                            <Ionicons name="heart-outline" size={20} color="#666" />
+                            <Ionicons name="heart-outline" size={20} color={Colors.dark.textSecondary} />
                             <Text style={styles.metaText}>{plan.likes} Beğeni</Text>
                         </View>
                     </View>
@@ -152,7 +153,7 @@ export default function RecommendedPlanDetail() {
                 {/* Floating Action Button */}
                 <View style={styles.footer}>
                     <TouchableOpacity style={styles.saveButton} onPress={handleSaveToMyPlans} disabled={saving}>
-                        {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveButtonText}>Bu Programı Planlarıma Ekle</Text>}
+                        {saving ? <ActivityIndicator color={Colors.dark.background} /> : <Text style={styles.saveButtonText}>Bu Programı Planlarıma Ekle</Text>}
                     </TouchableOpacity>
                 </View>
             </View>
@@ -161,7 +162,7 @@ export default function RecommendedPlanDetail() {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#fff' },
+    container: { flex: 1, backgroundColor: Colors.dark.background },
     center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
     scrollContent: { paddingBottom: 0 },
 
@@ -169,8 +170,7 @@ const styles = StyleSheet.create({
     image: { width: '100%', height: '100%' },
     imageOverlay: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.8) 100%)', // Note: linear-gradient requires expo-linear-gradient, fallback to plain
-        backgroundColor: 'rgba(0,0,0,0.3)'
+        backgroundColor: 'rgba(0,0,0,0.4)', // Slightly darker overlay for text readability
     },
 
     backButton: {
@@ -182,54 +182,54 @@ const styles = StyleSheet.create({
     titleContainer: {
         position: 'absolute', bottom: 0, left: 0, right: 0,
         padding: 20,
-        backgroundColor: 'linear-gradient(180deg, transparent, rgba(0,0,0,0.8))' // Fallback handled by overlay mostly
+        // Gradient fallback approach or just rely on overlay
     },
     tagsRow: { flexDirection: 'row', marginBottom: 12 },
     tagBadge: {
-        backgroundColor: '#007AFF', paddingHorizontal: 10, paddingVertical: 4,
+        backgroundColor: Colors.dark.primary, paddingHorizontal: 10, paddingVertical: 4,
         borderRadius: 6, marginRight: 8
     },
-    tagText: { color: '#fff', fontSize: 12, fontWeight: '700' },
-    title: { fontSize: 28, fontWeight: '800', color: '#fff', marginBottom: 8, textShadowColor: 'rgba(0,0,0,0.5)', textShadowRadius: 10 },
-    subtitle: { fontSize: 16, color: '#eee', lineHeight: 22 },
+    tagText: { color: Colors.dark.background, fontSize: 12, fontWeight: '700' },
+    title: { fontSize: 28, fontWeight: '800', color: Colors.dark.text, marginBottom: 8, textShadowColor: 'rgba(0,0,0,0.8)', textShadowRadius: 10 },
+    subtitle: { fontSize: 16, color: '#eee', lineHeight: 22, textShadowColor: 'rgba(0,0,0,0.8)', textShadowRadius: 5 },
 
     metaContainer: {
         flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 20,
-        borderBottomWidth: 1, borderBottomColor: '#f0f0f0', marginHorizontal: 20
+        borderBottomWidth: 1, borderBottomColor: Colors.dark.border, marginHorizontal: 20
     },
     metaItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-    metaText: { fontSize: 14, color: '#444', fontWeight: '500' },
+    metaText: { fontSize: 14, color: Colors.dark.textSecondary, fontWeight: '500' },
 
     authorContainer: { flexDirection: 'row', alignItems: 'center', padding: 20, paddingTop: 15 },
     authorAvatar: {
-        width: 40, height: 40, borderRadius: 20, backgroundColor: '#eee',
+        width: 40, height: 40, borderRadius: 20, backgroundColor: Colors.dark.surface,
         justifyContent: 'center', alignItems: 'center', marginRight: 12
     },
-    authorInitials: { fontSize: 18, fontWeight: 'bold', color: '#555' },
-    authorLabel: { fontSize: 12, color: '#888' },
-    authorName: { fontSize: 15, fontWeight: '600', color: '#333' },
+    authorInitials: { fontSize: 18, fontWeight: 'bold', color: Colors.dark.text },
+    authorLabel: { fontSize: 12, color: Colors.dark.textSecondary },
+    authorName: { fontSize: 15, fontWeight: '600', color: Colors.dark.text },
 
     contentContainer: { paddingHorizontal: 20 },
 
     footer: {
         position: 'absolute', bottom: 0, left: 0, right: 0,
         padding: 20, paddingTop: 10,
-        backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#eee',
-        elevation: 20, shadowColor: '#000', shadowOffset: { width: 0, height: -4 }, shadowOpacity: 0.1, shadowRadius: 10
+        backgroundColor: Colors.dark.surface, borderTopWidth: 1, borderTopColor: Colors.dark.border,
+        elevation: 20, shadowColor: "#000", shadowOffset: { width: 0, height: -4 }, shadowOpacity: 0.3, shadowRadius: 10
     },
     saveButton: {
-        backgroundColor: '#007AFF', borderRadius: 16, paddingVertical: 16,
+        backgroundColor: Colors.dark.primary, borderRadius: 16, paddingVertical: 16,
         alignItems: 'center', justifyContent: 'center'
     },
-    saveButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' }
+    saveButtonText: { color: Colors.dark.background, fontSize: 16, fontWeight: 'bold' }
 });
 
 const markdownStyles = {
-    body: { fontSize: 16, lineHeight: 26, color: '#333' },
-    heading1: { fontSize: 24, fontWeight: 'bold', marginTop: 20, marginBottom: 10, color: '#111' },
-    heading2: { fontSize: 20, fontWeight: 'bold', marginTop: 15, marginBottom: 8, color: '#222' },
-    heading3: { fontSize: 18, fontWeight: 'bold', marginTop: 10, marginBottom: 6, color: '#333' },
+    body: { fontSize: 16, lineHeight: 26, color: Colors.dark.textSecondary },
+    heading1: { fontSize: 24, fontWeight: 'bold', marginTop: 20, marginBottom: 10, color: Colors.dark.text },
+    heading2: { fontSize: 20, fontWeight: 'bold', marginTop: 15, marginBottom: 8, color: Colors.dark.text },
+    heading3: { fontSize: 18, fontWeight: 'bold', marginTop: 10, marginBottom: 6, color: Colors.dark.text },
     paragraph: { marginVertical: 8 },
     list_item: { marginVertical: 4 },
-    strong: { fontWeight: 'bold', color: '#000' },
+    strong: { fontWeight: 'bold', color: Colors.dark.primary },
 };

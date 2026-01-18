@@ -23,6 +23,7 @@ import {
   EmailAuthProvider,
   sendPasswordResetEmail,
 } from "firebase/auth";
+import Colors from '../../constants/Colors';
 
 // Android'de LayoutAnimation'ı aç
 if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -34,7 +35,7 @@ const Card = ({ children, style }) => (
   <View
     style={[
       {
-        backgroundColor: "#fff",
+        backgroundColor: Colors.dark.surface,
         borderRadius: 16,
         padding: 16,
         marginBottom: 16,
@@ -43,7 +44,7 @@ const Card = ({ children, style }) => (
         shadowOpacity: 0.06,
         shadowRadius: 8,
         borderWidth: 1,
-        borderColor: "#e5e7eb",
+        borderColor: Colors.dark.border,
       },
       style,
     ]}
@@ -52,18 +53,18 @@ const Card = ({ children, style }) => (
   </View>
 );
 
-const Chevron = ({ open }) => (
-  <Text style={{ fontSize: 18, opacity: 0.6 }}>{open ? "▾" : "▸"}</Text>
+const Chevron = ({ open, color }) => (
+  <Text style={{ fontSize: 18, opacity: 0.6, color: color || Colors.dark.text }}>{open ? "▾" : "▸"}</Text>
 );
 
-const HeaderButton = ({ title, open, onPress }) => (
+const HeaderButton = ({ title, open, onPress, color }) => (
   <TouchableOpacity
     onPress={onPress}
     activeOpacity={0.8}
     style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
   >
-    <Text style={{ fontSize: 18, fontWeight: "700" }}>{title}</Text>
-    <Chevron open={open} />
+    <Text style={{ fontSize: 18, fontWeight: "700", color: color || Colors.dark.text }}>{title}</Text>
+    <Chevron open={open} color={color} />
   </TouchableOpacity>
 );
 /* ========================================================================= */
@@ -141,58 +142,60 @@ export default function SettingsScreen() {
 
   const inputBase = {
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: Colors.dark.border,
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 10,
     marginBottom: 10,
-    backgroundColor: "#fff",
+    backgroundColor: Colors.dark.surface,
+    color: Colors.dark.text
   };
 
   return (
-    <KeyboardAvoidingView behavior={Platform.select({ ios: "padding", android: undefined })} style={{ flex: 1 }}>
+    <KeyboardAvoidingView behavior={Platform.select({ ios: "padding", android: undefined })} style={{ flex: 1, backgroundColor: Colors.dark.background }}>
       <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
-        <Text style={{ fontSize: 28, fontWeight: "700", marginBottom: 12 }}>Ayarlar</Text>
+        <Text style={{ fontSize: 28, fontWeight: "700", marginBottom: 12, color: Colors.dark.text }}>Ayarlar</Text>
 
         {/* Kullanıcı Bilgileri */}
-        <Card>
-          <Text style={{ fontSize: 14, opacity: 0.6, marginBottom: 4 }}>E-posta</Text>
-          <Text style={{ fontSize: 16, fontWeight: "600" }}>{email}</Text>
-
+        <Card style={{ backgroundColor: Colors.dark.surface, borderColor: Colors.dark.border }}>
+          <Text style={{ fontSize: 14, color: Colors.dark.textSecondary, marginBottom: 4 }}>E-posta</Text>
+          <Text style={{ fontSize: 16, fontWeight: "600", color: Colors.dark.text }}>{email}</Text>
         </Card>
 
-
         {/* Şifre Değiştir */}
-        <Card>
-          <HeaderButton title="Şifre Değiştir" open={openPassword} onPress={togglePassword} />
+        <Card style={{ backgroundColor: Colors.dark.surface, borderColor: Colors.dark.border }}>
+          <HeaderButton title="Şifre Değiştir" open={openPassword} onPress={togglePassword} color={Colors.dark.text} />
           {openPassword && (
             <View style={{ marginTop: 12 }}>
-              <Text style={{ fontSize: 13, marginBottom: 6 }}>Mevcut Şifre</Text>
+              <Text style={{ fontSize: 13, marginBottom: 6, color: Colors.dark.textSecondary }}>Mevcut Şifre</Text>
               <TextInput
                 value={currentPass}
                 onChangeText={setCurrentPass}
                 secureTextEntry
                 placeholder="Mevcut şifreniz"
+                placeholderTextColor={Colors.dark.textSecondary}
                 blurOnSubmit={false}
                 style={inputBase}
               />
 
-              <Text style={{ fontSize: 13, marginBottom: 6 }}>Yeni Şifre</Text>
+              <Text style={{ fontSize: 13, marginBottom: 6, color: Colors.dark.textSecondary }}>Yeni Şifre</Text>
               <TextInput
                 value={newPass}
                 onChangeText={setNewPass}
                 secureTextEntry
                 placeholder="Yeni şifre"
+                placeholderTextColor={Colors.dark.textSecondary}
                 blurOnSubmit={false}
                 style={inputBase}
               />
 
-              <Text style={{ fontSize: 13, marginBottom: 6 }}>Yeni Şifre (Tekrar)</Text>
+              <Text style={{ fontSize: 13, marginBottom: 6, color: Colors.dark.textSecondary }}>Yeni Şifre (Tekrar)</Text>
               <TextInput
                 value={confirmPass}
                 onChangeText={setConfirmPass}
                 secureTextEntry
                 placeholder="Yeni şifre tekrar"
+                placeholderTextColor={Colors.dark.textSecondary}
                 blurOnSubmit={false}
                 style={[inputBase, { marginBottom: 16 }]}
               />
@@ -201,7 +204,7 @@ export default function SettingsScreen() {
                 onPress={handlePasswordUpdate}
                 disabled={busy}
                 style={{
-                  backgroundColor: "#0ea5e9",
+                  backgroundColor: Colors.dark.primary,
                   paddingVertical: 12,
                   borderRadius: 12,
                   alignItems: "center",
@@ -209,35 +212,37 @@ export default function SettingsScreen() {
                   opacity: busy ? 0.7 : 1,
                 }}
               >
-                {busy ? <ActivityIndicator /> : <Text style={{ color: "white", fontWeight: "700" }}>Şifreyi Güncelle</Text>}
+                {busy ? <ActivityIndicator color={Colors.dark.background} /> : <Text style={{ color: Colors.dark.background, fontWeight: "700" }}>Şifreyi Güncelle</Text>}
               </TouchableOpacity>
 
               <TouchableOpacity
                 onPress={handleSendResetEmail}
                 disabled={busy}
                 style={{
-                  backgroundColor: "#f3f4f6",
+                  backgroundColor: Colors.dark.surface,
                   paddingVertical: 12,
                   borderRadius: 12,
                   alignItems: "center",
+                  borderWidth: 1,
+                  borderColor: Colors.dark.border
                 }}
               >
-                <Text style={{ fontWeight: "700" }}>E-posta ile Sıfırlama Bağlantısı Gönder</Text>
+                <Text style={{ fontWeight: "700", color: Colors.dark.text }}>E-posta ile Sıfırlama Bağlantısı Gönder</Text>
               </TouchableOpacity>
             </View>
           )}
         </Card>
 
 
-        <Card>
-          <HeaderButton title="Hesap" open={openAccount} onPress={toggleAccount} />
+        <Card style={{ backgroundColor: Colors.dark.surface, borderColor: Colors.dark.border }}>
+          <HeaderButton title="Hesap" open={openAccount} onPress={toggleAccount} color={Colors.dark.text} />
           {openAccount && (
             <View style={{ marginTop: 12 }}>
               <TouchableOpacity
                 onPress={handleSignOut}
                 disabled={busy}
                 style={{
-                  backgroundColor: "#ef4444",
+                  backgroundColor: Colors.dark.error,
                   paddingVertical: 12,
                   borderRadius: 12,
                   alignItems: "center",
@@ -247,7 +252,7 @@ export default function SettingsScreen() {
                 {busy ? <ActivityIndicator color="#fff" /> : <Text style={{ color: "white", fontWeight: "700" }}>Çıkış Yap</Text>}
               </TouchableOpacity>
 
-              <Text style={{ fontSize: 12, opacity: 0.6, textAlign: "center", marginTop: 8 }}>
+              <Text style={{ fontSize: 12, color: Colors.dark.textSecondary, textAlign: "center", marginTop: 8 }}>
                 Güvenlik notu: Bazı işlemler için sistem sizden yakın zamanda tekrar giriş yapmanızı isteyebilir.
               </Text>
             </View>
@@ -255,8 +260,8 @@ export default function SettingsScreen() {
         </Card>
 
         {/* Geliştirici Araçları */}
-        <Card>
-          <Text style={{ fontSize: 18, fontWeight: "700", marginBottom: 12 }}>Geliştirici Araçları</Text>
+        <Card style={{ backgroundColor: Colors.dark.surface, borderColor: Colors.dark.border }}>
+          <Text style={{ fontSize: 18, fontWeight: "700", marginBottom: 12, color: Colors.dark.text }}>Geliştirici Araçları</Text>
           <TouchableOpacity
             onPress={() => router.push("/dev/seed-exercises")}
             style={{

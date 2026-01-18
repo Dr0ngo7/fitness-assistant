@@ -3,18 +3,31 @@ import React from "react";
 import { Stack, usePathname } from "expo-router";
 import { StatusBar, View, Platform } from "react-native";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
+import ThemedBackground from '../components/ThemedBackground';
 
 export default function RootLayout() {
   return (
-    <SafeAreaProvider>
-      <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
-      <SafeTopWrapper>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="auth" options={{ headerShown: false }} />
-          {/* Other screens will default to headerShown: false due to screenOptions */}
-        </Stack>
-      </SafeTopWrapper>
+    <SafeAreaProvider style={{ backgroundColor: '#121212' }}>
+      <StatusBar barStyle="light-content" backgroundColor="#121212" />
+      <ThemedBackground>
+        <SafeTopWrapper>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              animation: 'slide_from_right',
+              contentStyle: { backgroundColor: 'transparent' }, // Transparent to show ThemedBackground
+            }}
+          >
+            <Stack.Screen name="index" />
+            <Stack.Screen name="auth/login" />
+            <Stack.Screen name="auth/register" />
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="plan/[id]" />
+            <Stack.Screen name="plan/recommended/[id]" />
+            <Stack.Screen name="exercise/[id]" />
+          </Stack>
+        </SafeTopWrapper>
+      </ThemedBackground>
     </SafeAreaProvider>
   );
 }
@@ -34,7 +47,7 @@ function SafeTopWrapper({ children }) {
     <View
       style={{
         flex: 1,
-        backgroundColor: "#f8fafc",
+        backgroundColor: "transparent",
         paddingTop,
       }}
     >
