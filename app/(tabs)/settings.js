@@ -1,6 +1,5 @@
 // app/(tabs)/settings.js
 import React, { useMemo, useState } from "react";
-
 import {
   View,
   Text,
@@ -11,8 +10,10 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  LayoutAnimation,
-  UIManager,
+  Modal,
+  StyleSheet,
+  Switch,
+  Image
 } from "react-native";
 import { useRouter } from "expo-router";
 import { auth } from "../../firebase";
@@ -24,271 +25,360 @@ import {
   sendPasswordResetEmail,
 } from "firebase/auth";
 import Colors from '../../constants/Colors';
+import { Ionicons } from '@expo/vector-icons';
 
-// Android'de LayoutAnimation'ı aç
-if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
 
-/* ========= HOISTED COMPONENTS (focus kaybını önlemek için dışarıda) ========= */
-const Card = ({ children, style }) => (
-  <View
-    style={[
-      {
-        backgroundColor: Colors.dark.surface,
-        borderRadius: 16,
-        padding: 16,
-        marginBottom: 16,
-        elevation: 2,
-        shadowColor: "#000",
-        shadowOpacity: 0.06,
-        shadowRadius: 8,
-        borderWidth: 1,
-        borderColor: Colors.dark.border,
-      },
-      style,
-    ]}
-  >
-    {children}
+/* ================= COMPONENTLER ================= */
+
+const Section = ({ title, children }) => (
+  <View style={styles.sectionContainer}>
+    {title && <Text style={styles.sectionHeader}>{title}</Text>}
+    <View style={styles.sectionBody}>
+      {children}
+    </View>
   </View>
 );
 
-const Chevron = ({ open, color }) => (
-  <Text style={{ fontSize: 18, opacity: 0.6, color: color || Colors.dark.text }}>{open ? "▾" : "▸"}</Text>
-);
-
-const HeaderButton = ({ title, open, onPress, color }) => (
+const SettingItem = ({ icon, title, value, onPress, isDestructive, rightComponent }) => (
   <TouchableOpacity
     onPress={onPress}
-    activeOpacity={0.8}
-    style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
+    disabled={!onPress && !rightComponent} // Disable visibility feedback if not clickable/interactive
+    style={styles.itemContainer}
+    activeOpacity={0.7}
   >
-    <Text style={{ fontSize: 18, fontWeight: "700", color: color || Colors.dark.text }}>{title}</Text>
-    <Chevron open={open} color={color} />
+    <View style={styles.itemLeft}>
+      <View style={[styles.iconBox, isDestructive && styles.destructiveIconBox]}>
+        <Ionicons name={icon} size={20} color={isDestructive ? '#FF453A' : Colors.dark.text} />
+      </View>
+      <Text style={[styles.itemTitle, isDestructive && styles.destructiveText]}>{title}</Text>
+    </View>
+
+    <View style={styles.itemRight}>
+      {value && <Text style={styles.itemValue}>{value}</Text>}
+      {rightComponent}
+      {!rightComponent && onPress && (
+        <Ionicons name="chevron-forward" size={20} color={Colors.dark.textSecondary} style={{ marginLeft: 8 }} />
+      )}
+    </View>
   </TouchableOpacity>
 );
-/* ========================================================================= */
+
+/* ================= ANA EKRAN ================= */
 
 export default function SettingsScreen() {
   const router = useRouter();
   const user = auth.currentUser;
-  const email = useMemo(() => user?.email ?? "—", [user?.email]);
 
-  const [busy, setBusy] = useState(false);
-  const [openPassword, setOpenPassword] = useState(false);
-  const [openAccount, setOpenAccount] = useState(false);
+  // States
+  const [modalVisible, setModalVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
 
+  // Notification toggle mock
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+
+  // Password Input States
   const [currentPass, setCurrentPass] = useState("");
   const [newPass, setNewPass] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
 
-  const animate = () => LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-  const togglePassword = () => { animate(); setOpenPassword((s) => !s); };
-  const toggleAccount = () => { animate(); setOpenAccount((s) => !s); };
-
   const handleSignOut = async () => {
-    try {
-      setBusy(true);
-      await signOut(auth);
-      Alert.alert("Çıkış yapıldı", "Giriş ekranına yönlendiriliyorsunuz.");
-      router.replace("/auth/login");
-    } catch (e) {
-      Alert.alert("Hata", e?.message ?? "Çıkış sırasında bir sorun oluştu.");
-    } finally {
-      setBusy(false);
-    }
+    Alert.alert(
+      "Çıkış Yap",
+      "Hesabınızdan çıkış yapmak istediğinize emin misiniz?",
+      [
+        { text: "Vazgeç", style: "cancel" },
+        {
+          text: "Çıkış Yap",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              setLoading(true);
+              await signOut(auth);
+              router.replace("/auth/login");
+            } catch (e) {
+              Alert.alert("Hata", e.message);
+            } finally {
+              setLoading(false);
+            }
+          }
+        }
+      ]
+    );
   };
 
-  const handlePasswordUpdate = async () => {
-    if (!user?.email) return Alert.alert("Hata", "Kullanıcı bulunamadı.");
-    if (!currentPass || !newPass || !confirmPass)
-      return Alert.alert("Eksik alan", "Lütfen tüm şifre alanlarını doldurun.");
-    if (newPass.length < 6)
-      return Alert.alert("Zayıf şifre", "Yeni şifre en az 6 karakter olmalıdır.");
-    if (newPass !== confirmPass)
-      return Alert.alert("Uyarı", "Yeni şifre ile tekrar aynı değil.");
+  const handleChangePassword = async () => {
+    if (!currentPass || !newPass || !confirmPass) {
+      return Alert.alert("Eksik", "Lütfen tüm alanları doldurun.");
+    }
+    if (newPass.length < 6) return Alert.alert("Hata", "Yeni şifre en az 6 karakter olmalı.");
+    if (newPass !== confirmPass) return Alert.alert("Hata", "Şifreler uyuşmuyor.");
 
     try {
-      setBusy(true);
-      const credential = EmailAuthProvider.credential(user.email, currentPass);
-      await reauthenticateWithCredential(user, credential);
+      setLoading(true);
+      const cred = EmailAuthProvider.credential(user.email, currentPass);
+      await reauthenticateWithCredential(user, cred);
       await updatePassword(user, newPass);
-      setCurrentPass(""); setNewPass(""); setConfirmPass("");
+
       Alert.alert("Başarılı", "Şifreniz güncellendi.");
+      setModalVisible(false); // Close modal
+      setCurrentPass(""); setNewPass(""); setConfirmPass("");
     } catch (e) {
-      const msg =
-        e?.code === "auth/wrong-password" ? "Mevcut şifre yanlış."
-          : e?.code === "auth/too-many-requests" ? "Çok fazla deneme. Bir süre sonra tekrar deneyin."
-            : e?.code === "auth/requires-recent-login" ? "Güvenlik için tekrar giriş yapın ve yeniden deneyin."
-              : e?.message ?? "Şifre güncellenemedi.";
-      Alert.alert("Hata", msg);
+      if (e.code === 'auth/wrong-password') Alert.alert("Hata", "Mevcut şifreniz yanlış.");
+      else Alert.alert("Hata", e.message);
     } finally {
-      setBusy(false);
+      setLoading(false);
     }
-  };
-
-  const handleSendResetEmail = async () => {
-    if (!user?.email) return Alert.alert("Hata", "Kullanıcı e-postası bulunamadı.");
-    try {
-      setBusy(true);
-      await sendPasswordResetEmail(auth, user.email);
-      Alert.alert("E-posta gönderildi", "Sıfırlama bağlantısı e-postanıza gönderildi.");
-    } catch (e) {
-      Alert.alert("Hata", e?.message ?? "E-posta gönderilemedi.");
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const inputBase = {
-    borderWidth: 1,
-    borderColor: Colors.dark.border,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginBottom: 10,
-    backgroundColor: Colors.dark.surface,
-    color: Colors.dark.text
   };
 
   return (
-    <KeyboardAvoidingView behavior={Platform.select({ ios: "padding", android: undefined })} style={{ flex: 1, backgroundColor: Colors.dark.background }}>
-      <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
-        <Text style={{ fontSize: 28, fontWeight: "700", marginBottom: 12, color: Colors.dark.text }}>Ayarlar</Text>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      style={{ flex: 1, backgroundColor: Colors.dark.background }}
+    >
+      <ScrollView contentContainerStyle={styles.scrollContent}>
 
-        {/* Kullanıcı Bilgileri */}
-        <Card style={{ backgroundColor: Colors.dark.surface, borderColor: Colors.dark.border }}>
-          <Text style={{ fontSize: 14, color: Colors.dark.textSecondary, marginBottom: 4 }}>E-posta</Text>
-          <Text style={{ fontSize: 16, fontWeight: "600", color: Colors.dark.text }}>{email}</Text>
-        </Card>
+        {/* Header - Profile */}
+        <Text style={styles.headerTitle}>Ayarlar</Text>
 
-        {/* Şifre Değiştir */}
-        <Card style={{ backgroundColor: Colors.dark.surface, borderColor: Colors.dark.border }}>
-          <HeaderButton title="Şifre Değiştir" open={openPassword} onPress={togglePassword} color={Colors.dark.text} />
-          {openPassword && (
-            <View style={{ marginTop: 12 }}>
-              <Text style={{ fontSize: 13, marginBottom: 6, color: Colors.dark.textSecondary }}>Mevcut Şifre</Text>
-              <TextInput
-                value={currentPass}
-                onChangeText={setCurrentPass}
-                secureTextEntry
-                placeholder="Mevcut şifreniz"
-                placeholderTextColor={Colors.dark.textSecondary}
-                blurOnSubmit={false}
-                style={inputBase}
+        <View style={styles.profileCard}>
+          <View style={styles.avatarContainer}>
+            <Text style={styles.avatarText}>{user?.email?.charAt(0).toUpperCase() || "U"}</Text>
+          </View>
+          <View style={styles.profileInfo}>
+            <Text style={styles.profileName}>Kullanıcı</Text>
+            <Text style={styles.profileEmail}>{user?.email}</Text>
+          </View>
+          <View style={{ alignItems: 'center', marginVertical: 20 }}>
+            <Text style={{ color: Colors.dark.textSecondary, fontSize: 12 }}>GymPro v1.0.0</Text>
+          </View>
+        </View>
+
+        {/* Section 1: Hesap */}
+        <Section title="HESAP">
+          <SettingItem
+            icon="key-outline"
+            title="Şifre Değiştir"
+            onPress={() => setModalVisible(true)}
+          />
+          <SettingItem
+            icon="notifications-outline"
+            title="Bildirimler"
+            rightComponent={
+              <Switch
+                value={notificationsEnabled}
+                onValueChange={setNotificationsEnabled}
+                trackColor={{ false: '#767577', true: Colors.dark.primary }}
+                thumbColor={notificationsEnabled ? '#fff' : '#f4f3f4'}
               />
+            }
+          />
+        </Section>
 
-              <Text style={{ fontSize: 13, marginBottom: 6, color: Colors.dark.textSecondary }}>Yeni Şifre</Text>
-              <TextInput
-                value={newPass}
-                onChangeText={setNewPass}
-                secureTextEntry
-                placeholder="Yeni şifre"
-                placeholderTextColor={Colors.dark.textSecondary}
-                blurOnSubmit={false}
-                style={inputBase}
-              />
+        {/* Section 2: Uygulama */}
+        <Section title="UYGULAMA">
+          <SettingItem icon="language-outline" title="Dil" value="Türkçe (TR)" />
+          <SettingItem icon="moon-outline" title="Tema" value="Koyu Mod" />
+          <SettingItem icon="information-circle-outline" title="Hakkında" value="v1.0.0" />
+          <SettingItem
+            icon="document-text-outline"
+            title="Gizlilik Politikası"
+            onPress={() => Alert.alert("Bilgi", "Web sitesine yönlendirileceksiniz.")}
+          />
+        </Section>
 
-              <Text style={{ fontSize: 13, marginBottom: 6, color: Colors.dark.textSecondary }}>Yeni Şifre (Tekrar)</Text>
-              <TextInput
-                value={confirmPass}
-                onChangeText={setConfirmPass}
-                secureTextEntry
-                placeholder="Yeni şifre tekrar"
-                placeholderTextColor={Colors.dark.textSecondary}
-                blurOnSubmit={false}
-                style={[inputBase, { marginBottom: 16 }]}
-              />
-
-              <TouchableOpacity
-                onPress={handlePasswordUpdate}
-                disabled={busy}
-                style={{
-                  backgroundColor: Colors.dark.primary,
-                  paddingVertical: 12,
-                  borderRadius: 12,
-                  alignItems: "center",
-                  marginBottom: 10,
-                  opacity: busy ? 0.7 : 1,
-                }}
-              >
-                {busy ? <ActivityIndicator color={Colors.dark.background} /> : <Text style={{ color: Colors.dark.background, fontWeight: "700" }}>Şifreyi Güncelle</Text>}
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={handleSendResetEmail}
-                disabled={busy}
-                style={{
-                  backgroundColor: Colors.dark.surface,
-                  paddingVertical: 12,
-                  borderRadius: 12,
-                  alignItems: "center",
-                  borderWidth: 1,
-                  borderColor: Colors.dark.border
-                }}
-              >
-                <Text style={{ fontWeight: "700", color: Colors.dark.text }}>E-posta ile Sıfırlama Bağlantısı Gönder</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </Card>
-
-
-        <Card style={{ backgroundColor: Colors.dark.surface, borderColor: Colors.dark.border }}>
-          <HeaderButton title="Hesap" open={openAccount} onPress={toggleAccount} color={Colors.dark.text} />
-          {openAccount && (
-            <View style={{ marginTop: 12 }}>
-              <TouchableOpacity
-                onPress={handleSignOut}
-                disabled={busy}
-                style={{
-                  backgroundColor: Colors.dark.error,
-                  paddingVertical: 12,
-                  borderRadius: 12,
-                  alignItems: "center",
-                  opacity: busy ? 0.7 : 1,
-                }}
-              >
-                {busy ? <ActivityIndicator color="#fff" /> : <Text style={{ color: "white", fontWeight: "700" }}>Çıkış Yap</Text>}
-              </TouchableOpacity>
-
-              <Text style={{ fontSize: 12, color: Colors.dark.textSecondary, textAlign: "center", marginTop: 8 }}>
-                Güvenlik notu: Bazı işlemler için sistem sizden yakın zamanda tekrar giriş yapmanızı isteyebilir.
-              </Text>
-            </View>
-          )}
-        </Card>
-
-        {/* Geliştirici Araçları */}
-        <Card style={{ backgroundColor: Colors.dark.surface, borderColor: Colors.dark.border }}>
-          <Text style={{ fontSize: 18, fontWeight: "700", marginBottom: 12, color: Colors.dark.text }}>Geliştirici Araçları</Text>
-          <TouchableOpacity
+        {/* Section 3: Geliştirici (Geçici) */}
+        <Section title="GELİŞTİRİCİ ARAÇLARI">
+          <SettingItem
+            icon="code-slash-outline"
+            title="Egzersiz Seed"
             onPress={() => router.push("/dev/seed-exercises")}
-            style={{
-              backgroundColor: "#6366f1",
-              paddingVertical: 12,
-              borderRadius: 12,
-              alignItems: "center",
-              marginBottom: 10,
-            }}
-          >
-            <Text style={{ color: "white", fontWeight: "700" }}>Egzersiz Seed Ekranı</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
+          />
+          <SettingItem
+            icon="flask-outline"
+            title="Program Seed"
             onPress={() => router.push("/dev/seed-recommended-page")}
-            style={{
-              backgroundColor: "#8b5cf6",
-              paddingVertical: 12,
-              borderRadius: 12,
-              alignItems: "center",
-            }}
-          >
-            <Text style={{ color: "white", fontWeight: "700" }}>Önerilen Programları Seed Et</Text>
+          />
+        </Section>
+
+        {/* Section 4: Çıkış */}
+        <View style={styles.logoutContainer}>
+          <TouchableOpacity style={styles.logoutButton} onPress={handleSignOut}>
+            <Ionicons name="log-out-outline" size={20} color="#FF453A" style={{ marginRight: 8 }} />
+            <Text style={styles.logoutText}>Çıkış Yap</Text>
           </TouchableOpacity>
-        </Card>
+          <Text style={styles.versionText}>Fitness Assistant v1.0.0 (Build 124)</Text>
+        </View>
 
       </ScrollView>
+
+      {/* MODAL: Şifre Değiştirme */}
+      <Modal
+        visible={modalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalOverlay}
+        >
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Şifre Değiştir</Text>
+              <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeButton}>
+                <Ionicons name="close" size={24} color={Colors.dark.text} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.modalBody}>
+              <Text style={styles.inputLabel}>Mevcut Şifre</Text>
+              <TextInput
+                style={styles.input}
+                secureTextEntry
+                value={currentPass}
+                onChangeText={setCurrentPass}
+                placeholder="********"
+                placeholderTextColor="#666"
+              />
+
+              <Text style={styles.inputLabel}>Yeni Şifre</Text>
+              <TextInput
+                style={styles.input}
+                secureTextEntry
+                value={newPass}
+                onChangeText={setNewPass}
+                placeholder="********"
+                placeholderTextColor="#666"
+              />
+
+              <Text style={styles.inputLabel}>Yeni Şifre (Tekrar)</Text>
+              <TextInput
+                style={[styles.input, { marginBottom: 20 }]}
+                secureTextEntry
+                value={confirmPass}
+                onChangeText={setConfirmPass}
+                placeholder="********"
+                placeholderTextColor="#666"
+              />
+
+              <TouchableOpacity
+                style={styles.saveButton}
+                onPress={handleChangePassword}
+                disabled={loading}
+              >
+                {loading ? <ActivityIndicator color="#000" /> : <Text style={styles.saveButtonText}>Güncelle</Text>}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
     </KeyboardAvoidingView>
   );
 }
+
+const styles = StyleSheet.create({
+  // Global
+  scrollContent: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 100 },
+  headerTitle: { fontSize: 34, fontWeight: '800', color: Colors.dark.text, marginBottom: 20 },
+
+  // Profile Card
+  profileCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 30,
+  },
+  avatarContainer: {
+    width: 70, height: 70, borderRadius: 35,
+    backgroundColor: '#333',
+    justifyContent: 'center', alignItems: 'center',
+    marginRight: 15,
+    borderWidth: 2, borderColor: Colors.dark.primary
+  },
+  avatarText: { fontSize: 28, fontWeight: '700', color: Colors.dark.primary },
+  profileInfo: { justifyContent: 'center' },
+  profileName: { fontSize: 20, fontWeight: '700', color: Colors.dark.text },
+  profileEmail: { fontSize: 14, color: Colors.dark.textSecondary, marginTop: 2 },
+
+  // Sections
+  sectionContainer: { marginBottom: 25 },
+  sectionHeader: {
+    fontSize: 12, fontWeight: '600',
+    color: Colors.dark.textSecondary,
+    marginBottom: 10, marginLeft: 10,
+    letterSpacing: 1
+  },
+  sectionBody: {
+    backgroundColor: '#1c1c1e', // Slightly lighter than black
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+
+  // Settings Item
+  itemContainer: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingVertical: 14, paddingHorizontal: 16,
+    borderBottomWidth: 1, borderBottomColor: '#2c2c2e' // Separator
+  },
+  itemLeft: { flexDirection: 'row', alignItems: 'center' },
+  iconBox: {
+    width: 32, height: 32, borderRadius: 8,
+    backgroundColor: '#2c2c2e',
+    justifyContent: 'center', alignItems: 'center',
+    marginRight: 12
+  },
+  destructiveIconBox: { backgroundColor: 'rgba(255, 69, 58, 0.15)' },
+  itemTitle: { fontSize: 16, color: Colors.dark.text, fontWeight: '500' },
+  destructiveText: { color: '#FF453A' },
+  itemRight: { flexDirection: 'row', alignItems: 'center' },
+  itemValue: { fontSize: 15, color: Colors.dark.textSecondary, marginRight: 8 },
+
+  // Logout Area
+  logoutContainer: { marginTop: 10, alignItems: 'center' },
+  logoutButton: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: 'rgba(255, 69, 58, 0.1)',
+    paddingVertical: 12, paddingHorizontal: 30,
+    borderRadius: 20,
+    marginBottom: 20
+  },
+  logoutText: { color: '#FF453A', fontSize: 16, fontWeight: '700' },
+  versionText: { color: '#666', fontSize: 12 },
+
+  // Modal Layout
+  modalOverlay: {
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'flex-end', // Bottom sheet style or center
+  },
+  modalContent: {
+    backgroundColor: '#1c1c1e',
+    borderTopLeftRadius: 20, borderTopRightRadius: 20,
+    padding: 20, paddingBottom: 50,
+    minHeight: '50%'
+  },
+  modalHeader: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    marginBottom: 20
+  },
+  modalTitle: { fontSize: 20, fontWeight: '700', color: Colors.dark.text },
+  closeButton: { padding: 5, backgroundColor: '#333', borderRadius: 15 },
+
+  modalBody: {},
+  inputLabel: { color: Colors.dark.textSecondary, marginBottom: 8, marginTop: 10, fontSize: 14, fontWeight: '600' },
+  input: {
+    backgroundColor: '#2c2c2e',
+    borderRadius: 12,
+    color: '#fff',
+    padding: 14,
+    fontSize: 16,
+    borderWidth: 1, borderColor: '#3a3a3c'
+  },
+  saveButton: {
+    marginTop: 30,
+    backgroundColor: Colors.dark.primary,
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center'
+  },
+  saveButtonText: { color: '#000', fontSize: 16, fontWeight: 'bold' }
+});

@@ -1,7 +1,7 @@
 import { useRouter, useFocusEffect } from 'expo-router';
 import { collection, onSnapshot, query, orderBy, getDocs } from 'firebase/firestore';
 import { useCallback, useState, useEffect } from 'react';
-import { FlatList, Text, TouchableOpacity, View, StyleSheet, SafeAreaView, ActivityIndicator, Image, ScrollView } from 'react-native';
+import { FlatList, Text, TouchableOpacity, View, StyleSheet, SafeAreaView, ActivityIndicator, Image, ScrollView, Modal } from 'react-native';
 import { auth, db } from '../../firebase';
 import { Ionicons } from '@expo/vector-icons';
 import Colors from '../../constants/Colors';
@@ -15,6 +15,7 @@ export default function PlanDashboard() {
 
   const [loadingMyPlans, setLoadingMyPlans] = useState(true);
   const [loadingRecommended, setLoadingRecommended] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const uid = auth.currentUser?.uid;
 
@@ -188,12 +189,71 @@ export default function PlanDashboard() {
       {activeTab === 'my_plans' && (
         <TouchableOpacity
           style={styles.fab}
-          onPress={() => router.push('/plan/new')}
+          onPress={() => setShowCreateModal(true)}
         >
           <Ionicons name="add" size={30} color={Colors.dark.background} />
           <Text style={styles.fabText}>Yeni Plan</Text>
         </TouchableOpacity>
       )}
+
+      {/* Create Plan Selection Modal */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={showCreateModal}
+        onRequestClose={() => setShowCreateModal(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowCreateModal(false)}
+        >
+          <TouchableOpacity activeOpacity={1} style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Plan Oluştur</Text>
+              <TouchableOpacity onPress={() => setShowCreateModal(false)}>
+                <Ionicons name="close" size={24} color={Colors.dark.textSecondary} />
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.modalSubtitle}>Nasıl bir fitness planı oluşturmak istersin?</Text>
+
+            <TouchableOpacity
+              style={[styles.optionButton, { backgroundColor: '#2C2C2E', borderColor: Colors.dark.primary, borderWidth: 1 }]}
+              onPress={() => {
+                setShowCreateModal(false);
+                router.push('/plan/new');
+              }}
+            >
+              <View style={[styles.iconCircle, { backgroundColor: 'rgba(212, 255, 0, 0.1)' }]}>
+                <Ionicons name="sparkles" size={24} color={Colors.dark.primary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.optionTitle, { color: Colors.dark.primary }]}>Yapay Zeka ile</Text>
+                <Text style={styles.optionDesc}>Sana özel, hedeflerine uygun otomatik bir plan hazırla.</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={Colors.dark.textSecondary} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.optionButton, { backgroundColor: '#2C2C2E' }]}
+              onPress={() => {
+                setShowCreateModal(false);
+                router.push('/plan/manual');
+              }}
+            >
+              <View style={[styles.iconCircle, { backgroundColor: '#3A3A3C' }]}>
+                <Ionicons name="list" size={24} color="#fff" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.optionTitle, { color: '#fff' }]}>Boş Plan</Text>
+                <Text style={styles.optionDesc}>Egzersizleri tek tek kendin seçerek plan oluştur.</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={Colors.dark.textSecondary} />
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+
     </SafeAreaView>
   );
 }
@@ -268,5 +328,29 @@ const styles = StyleSheet.create({
     paddingVertical: 12, paddingHorizontal: 24,
     elevation: 5, shadowColor: Colors.dark.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8
   },
-  fabText: { color: Colors.dark.background, fontSize: 16, fontWeight: 'bold', marginLeft: 8 }
+  fabText: { color: Colors.dark.background, fontSize: 16, fontWeight: 'bold', marginLeft: 8 },
+
+  // Modal Styles
+  modalOverlay: {
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'center', alignItems: 'center', padding: 20
+  },
+  modalContent: {
+    width: '100%', backgroundColor: '#1C1C1E', borderRadius: 24, padding: 24,
+    borderWidth: 1, borderColor: '#333',
+    shadowColor: "#000", shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.5, shadowRadius: 20, elevation: 10
+  },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
+  modalTitle: { fontSize: 22, fontWeight: '800', color: '#fff' },
+  modalSubtitle: { fontSize: 14, color: Colors.dark.textSecondary, marginBottom: 24 },
+
+  optionButton: {
+    flexDirection: 'row', alignItems: 'center',
+    padding: 16, borderRadius: 16, marginBottom: 12,
+  },
+  iconCircle: {
+    width: 48, height: 48, borderRadius: 24, justifyContent: 'center', alignItems: 'center', marginRight: 16
+  },
+  optionTitle: { fontSize: 17, fontWeight: '700', marginBottom: 4 },
+  optionDesc: { fontSize: 13, color: Colors.dark.textSecondary, lineHeight: 18, paddingRight: 10 }
 });

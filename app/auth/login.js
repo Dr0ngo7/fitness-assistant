@@ -1,10 +1,11 @@
 import { useRouter } from 'expo-router';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useState } from 'react';
-import { Alert, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Text, TextInput, TouchableOpacity, View, Image } from 'react-native';
 import { auth } from '../../firebase';
 import { migrateLocalPlanToFS } from '../../lib/migrate';
 import Colors from '../../constants/Colors';
+import { getFriendlyErrorMessage } from '../../utils/AuthErrors';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -17,12 +18,19 @@ export default function LoginScreen() {
       await migrateLocalPlanToFS();
       router.replace('/(tabs)/musclemap');
     } catch (e) {
-      Alert.alert('Giriş başarısız', e.message || 'Hata');
+      const message = getFriendlyErrorMessage(e.code);
+      Alert.alert('Giriş Başarısız', message);
     }
   };
 
   return (
-    <View style={{ flex: 1, justifyContent: 'center', padding: 24, backgroundColor: Colors.dark.background }}>
+    <View style={{ flex: 1, justifyContent: 'flex-start', paddingTop: 60, paddingHorizontal: 24, backgroundColor: Colors.dark.background }}>
+      <View style={{ alignItems: 'center', marginBottom: 10 }}>
+        <Image
+          source={require('../../assets/images/icon.png')}
+          style={{ width: 260, height: 260, borderRadius: 50 }}
+        />
+      </View>
       <Text style={{ fontSize: 26, fontWeight: '800', marginBottom: 24, color: Colors.dark.text }}>Giriş Yap</Text>
 
       <TextInput

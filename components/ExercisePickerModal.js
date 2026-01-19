@@ -7,26 +7,27 @@ import { db } from "../firebase";
 import Colors from "../constants/Colors";
 
 /** --- Muscle Group Configuration (Copied for isolated modal logic) --- */
+// --- Muscle Group Configuration --- 
 const MUSCLE_TO_GROUP = {
-    chest: "gogus",
-    "upper-back": "sirt",
-    "lower-back": "sirt",
-    trapezius: "sirt",
-    deltoids: "omuz",
-    neck: "omuz",
+    chest: "chest",
+    "upper-back": "back",
+    "lower-back": "back",
+    trapezius: "back",
+    deltoids: "shoulders",
+    neck: "shoulders",
     biceps: "arms",
     triceps: "arms",
     forearm: "arms",
-    quadriceps: "bacak",
-    hamstring: "bacak",
-    calves: "bacak",
-    gluteal: "bacak",
-    adductors: "bacak",
-    knees: "bacak",
-    tibialis: "bacak",
-    ankles: "bacak",
-    abs: "karin",
-    obliques: "karin",
+    quadriceps: "legs",
+    hamstring: "legs",
+    calves: "legs",
+    gluteal: "legs",
+    adductors: "legs",
+    knees: "legs",
+    tibialis: "legs",
+    ankles: "legs",
+    abs: "core",
+    obliques: "core",
 };
 
 const DISABLED_PARTS = ["head", "hair", "face", "hands", "feet"];
@@ -60,11 +61,15 @@ export default function ExercisePickerModal({ visible, onClose, onSelect }) {
         if (DISABLED_PARTS.includes(slug)) return;
 
         const groupSlug = MUSCLE_TO_GROUP[slug];
+
+        // Bazı kaslar için fallback (eğer DB'de yoksa genele yönlendir)
+        // Burada basitçe groupSlug varsa aratıyoruz.
         if (groupSlug) {
             setSelectedGroupSlug(groupSlug);
             await fetchExercises(groupSlug);
         } else {
-            Alert.alert("Bilgi", "Bu bölge için henüz egzersiz tanımlı değil.");
+            // Mapping'de yoksa
+            Alert.alert("Bilgi", "Bu bölge için tanımlı egzersiz grubu bulunamadı.");
         }
     };
 
@@ -72,11 +77,17 @@ export default function ExercisePickerModal({ visible, onClose, onSelect }) {
         setLoading(true);
         setStep(2); // Move to list view
         try {
-            const q = query(
+            // Veritabanında 'group' alanı bu slug'ı tutuyor olmalı.
+            // Eğer 'on_bacak' gibi spesifik varsa gelir.
+            let q = query(
                 collection(db, "exercises"),
                 where("group", "==", groupSlug),
-                limit(50) // Limit just in case
+                limit(50)
             );
+
+            // Eğer 'sirt' gibi genel bir grup seçildiyse ve DB detaylıysa belki gelmez ama
+            // fitness-assistant-v2 yapısında genelde düz mapping var.
+
             const snap = await getDocs(q);
             const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
             setExercises(data);
@@ -88,6 +99,7 @@ export default function ExercisePickerModal({ visible, onClose, onSelect }) {
             setLoading(false);
         }
     };
+
 
     const handleExerciseSelect = (ex) => {
         setSelectedExercise(ex);

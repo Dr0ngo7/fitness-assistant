@@ -244,12 +244,12 @@ export default function NewPlanScreen() {
                     <View>
                         <View style={styles.planHeader}>
                             <Text style={styles.planTitle}>Önizleme</Text>
-                            <View style={{ flexDirection: 'row', gap: 10 }}>
-                                <TouchableOpacity onPress={() => setIsChatVisible(true)} style={[styles.secondaryBtn, { backgroundColor: '#5856D6' }]}>
-                                    <Ionicons name="chatbubbles" size={20} color="#fff" />
+                            <View style={{ flexDirection: 'row', gap: 5, alignItems: 'center' }}>
+                                <TouchableOpacity onPress={() => setWeeklyPlan(null)} style={{ padding: 8 }}>
+                                    <Ionicons name="pencil" size={22} color={Colors.dark.primary} />
                                 </TouchableOpacity>
-                                <TouchableOpacity onPress={() => setWeeklyPlan(null)} style={styles.secondaryBtn}>
-                                    <Text style={{ color: Colors.dark.textSecondary }}>Düzenle</Text>
+                                <TouchableOpacity onPress={() => setIsChatVisible(true)} style={{ padding: 8 }}>
+                                    <Ionicons name="chatbubbles" size={22} color={Colors.dark.primary} />
                                 </TouchableOpacity>
                                 <TouchableOpacity onPress={savePlan} style={styles.primaryBtn}>
                                     <Text style={{ color: Colors.dark.background, fontWeight: 'bold' }}>Kaydet</Text>

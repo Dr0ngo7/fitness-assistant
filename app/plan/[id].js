@@ -180,6 +180,26 @@ export default function PlanDetailScreen() {
 
     // ----------------------------
 
+    const clearDay = async () => {
+        Alert.alert("Günü Sıfırla", "Bu günün tüm egzersizleri silinecek ve 'Dinlenme' olarak işaretlenecek. Emin misin?", [
+            { text: "Vazgeç", style: "cancel" },
+            {
+                text: "Sıfırla",
+                style: "destructive",
+                onPress: async () => {
+                    const updatedPlanData = [...plan.data];
+                    const dayIndex = updatedPlanData.findIndex(d => d.day === selectedDay.day);
+                    if (dayIndex === -1) return;
+
+                    updatedPlanData[dayIndex].exercises = [];
+                    updatedPlanData[dayIndex].focus = 'Dinlenme';
+
+                    await handleSavedPlanUpdate(updatedPlanData);
+                }
+            }
+        ]);
+    };
+
     if (loading) {
         return (
             <View style={styles.center}>
@@ -236,7 +256,11 @@ export default function PlanDetailScreen() {
                 <View style={[styles.dayCard, isEditing && { borderColor: Colors.dark.primary, borderWidth: 2 }]}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Text style={styles.dayTitle}>{selectedDay.day_tr}</Text>
-                        {isEditing && <Text style={{ color: Colors.dark.primary, fontWeight: 'bold' }}>DÜZENLEME MODU</Text>}
+                        {isEditing && (
+                            <TouchableOpacity onPress={clearDay} style={{ backgroundColor: 'rgba(255, 69, 58, 0.1)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }}>
+                                <Text style={{ color: Colors.dark.error, fontWeight: '600', fontSize: 13 }}>Günü Sıfırla</Text>
+                            </TouchableOpacity>
+                        )}
                     </View>
                     <Text style={styles.dayFocus}>Odak: {selectedDay.focus}</Text>
 

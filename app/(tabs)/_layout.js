@@ -30,18 +30,18 @@ export default function TabsLayout() {
       }
     }}>
       <Tabs.Screen
-        name="musclemap"
-        options={{
-          title: 'Kas Haritası',
-          tabBarIcon: ({ color, size }) => <Ionicons name="body-outline" color={color} size={size} />
-        }}
-      />
-
-      <Tabs.Screen
         name="plan"
         options={{
           title: 'Planım',
           tabBarIcon: ({ color, size }) => <Ionicons name="list-outline" color={color} size={size} />
+        }}
+      />
+
+      <Tabs.Screen
+        name="musclemap"
+        options={{
+          title: 'Kas Haritası',
+          tabBarIcon: ({ color, size }) => <Ionicons name="body-outline" color={color} size={size} />
         }}
       />
       <Tabs.Screen
