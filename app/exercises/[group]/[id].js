@@ -129,9 +129,18 @@ export default function ExerciseDetailScreen() {
             </View>
           </View>
 
-          {/* Video Button */}
-          {exercise.videoUrl && (
-            <TouchableOpacity style={styles.videoButton} onPress={() => setVideoModalVisible(true)}>
+          {/* Video Button - Always show if field exists (even empty) */}
+          {(exercise.videoUrl !== undefined) && (
+            <TouchableOpacity
+              style={[styles.videoButton, !exercise.videoUrl && { opacity: 0.7 }]}
+              onPress={() => {
+                if (!exercise.videoUrl) {
+                  Alert.alert("Bilgi", "Bu egzersiz için henüz video eklenmedi.");
+                } else {
+                  setVideoModalVisible(true);
+                }
+              }}
+            >
               <LinearGradient
                 colors={['#FF416C', '#FF4B2B']}
                 start={{ x: 0, y: 0 }}
@@ -139,7 +148,7 @@ export default function ExerciseDetailScreen() {
                 style={styles.videoGradient}
               >
                 <Ionicons name="play-circle" size={28} color="#fff" />
-                <Text style={styles.videoButtonText}>Videolu Anlatım İzle</Text>
+                <Text style={styles.videoButtonText}>Video Anlatımı İzle</Text>
               </LinearGradient>
             </TouchableOpacity>
           )}

@@ -186,19 +186,7 @@ export default function SettingsScreen() {
           />
         </Section>
 
-        {/* Section 3: Geliştirici (Geçici) */}
-        <Section title="GELİŞTİRİCİ ARAÇLARI">
-          <SettingItem
-            icon="code-slash-outline"
-            title="Egzersiz Seed"
-            onPress={() => router.push("/dev/seed-exercises")}
-          />
-          <SettingItem
-            icon="flask-outline"
-            title="Program Seed"
-            onPress={() => router.push("/dev/seed-recommended-page")}
-          />
-        </Section>
+
 
         {/* Section 4: Çıkış */}
         <View style={styles.logoutContainer}>
